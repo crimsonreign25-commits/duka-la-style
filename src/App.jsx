@@ -10,28 +10,53 @@ import {
 } from "lucide-react";
 
 /* =========================================================
+   STORE DETAILS
+   ========================================================= */
+
+const WHATSAPP_NUMBER = "254710574821";
+
+const STORE_DETAILS = {
+  phone: "0710574821",
+  whatsapp: "254710574821",
+
+  location: "Your store location",
+  hours: "Mon – Sat: 8:00 AM – 6:00 PM",
+
+  // Replace this when you have your actual Till/Paybill
+  mpesaNumber: "YOUR TILL / PAYBILL",
+};
+
+/* =========================================================
    REFRESH IMAGE SYSTEM
    ========================================================= */
 
 const REFRESH_SEED = Math.floor(Math.random() * 1000000);
 
+/*
+  Every category has its own image collection.
+  The image can change after refreshing the website,
+  but it stays inside that category's collection.
+*/
+
 const CLOTHING_IMAGES = {
+  /* ================= MEN ================= */
+
   menTrousers: [
     "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=700&q=80",
   ],
 
   menShirts: [
+    "https://images.unsplash.com/photo-1603252109303-2751441dd157?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&fit=crop&w=700&q=80",
   ],
 
   menTshirts: [
     "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1583743814966-8936f37f4e6?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=700&q=80",
   ],
 
   menJackets: [
@@ -42,12 +67,15 @@ const CLOTHING_IMAGES = {
   menJeans: [
     "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1475178626620-a4d074967452?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=700&q=80",
   ],
 
   menShorts: [
     "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1565084888279-aca607ecce0c?auto=format&fit=crop&w=700&q=80",
   ],
+
+  /* ================= WOMEN ================= */
 
   womenDresses: [
     "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=700&q=80",
@@ -62,13 +90,13 @@ const CLOTHING_IMAGES = {
 
   womenTrousers: [
     "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1506629905607-d9f5b5d9b2c8?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1506629905607-d9f5b5d9b2c8?auto=format&fit=crop&w=700&q=80",
   ],
 
   womenTops: [
-    "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1564257577054-0f3f4a1c0c65?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=700&q=80",
   ],
 
   womenJackets: [
@@ -81,6 +109,8 @@ const CLOTHING_IMAGES = {
     "https://images.unsplash.com/photo-1582418702059-97ebafb35d09?auto=format&fit=crop&w=700&q=80",
   ],
 
+  /* ================= KIDS ================= */
+
   boys: [
     "https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=700&q=80",
@@ -92,20 +122,24 @@ const CLOTHING_IMAGES = {
   ],
 
   kidsTrousers: [
-    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=700&q=80",
   ],
 
   kidsTshirts: [
-    "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=700&q=80",
   ],
 
   kidsShorts: [
-    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=700&q=80",
     "https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=700&q=80",
   ],
 };
+
+/* =========================================================
+   IMAGE SELECTOR
+   ========================================================= */
 
 function clothingImage(type, id) {
   const images = CLOTHING_IMAGES[type];
@@ -114,7 +148,10 @@ function clothingImage(type, id) {
     return "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=700&q=80";
   }
 
-  return images[(REFRESH_SEED + id) % images.length];
+  const index =
+    Math.abs(REFRESH_SEED + id * 17) % images.length;
+
+  return images[index];
 }
 
 /* =========================================================
@@ -316,7 +353,7 @@ const PRODUCTS = [
     note: "Light and comfortable children's shorts.",
   },
 
-  /* EXTRA PRODUCTS */
+  /* ================= EXTRA ================= */
 
   {
     id: 18,
@@ -351,8 +388,6 @@ const PRODUCTS = [
     note: "Smart comfortable trousers for children.",
   },
 ];
-
-const WHATSAPP_NUMBER = "254710574821";
 
 /* =========================================================
    FORMAT PRICE
@@ -408,6 +443,7 @@ function ProductCard({ product, onAdd }) {
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-[#1C2541]/50">
             <Tag size={30} />
+
             <span className="text-xs mt-2 uppercase tracking-wide">
               Image unavailable
             </span>
@@ -486,24 +522,42 @@ function ProductCard({ product, onAdd }) {
    ========================================================= */
 
 export default function Duka() {
+
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
 
   const [gender, setGender] = useState("All");
   const [category, setCategory] = useState("All");
 
-  const genders = ["All", "Men", "Women", "Kids"];
+  /* PAYMENT */
+
+  const [paymentOpen, setPaymentOpen] = useState(false);
+
+  const [paymentMethod, setPaymentMethod] =
+    useState("SEND MONEY");
+
+  const [transactionCode, setTransactionCode] =
+    useState("");
+
+  const genders = [
+    "All",
+    "Men",
+    "Women",
+    "Kids",
+  ];
 
   /* =======================================================
      CATEGORY FILTER
      ======================================================= */
 
   const categories = useMemo(() => {
+
     const filteredProducts =
       gender === "All"
         ? PRODUCTS
         : PRODUCTS.filter(
-            (product) => product.gender === gender
+            (product) =>
+              product.gender === gender
           );
 
     const uniqueCategories = [
@@ -514,7 +568,11 @@ export default function Duka() {
       ),
     ];
 
-    return ["All", ...uniqueCategories];
+    return [
+      "All",
+      ...uniqueCategories,
+    ];
+
   }, [gender]);
 
   /* =======================================================
@@ -522,7 +580,9 @@ export default function Duka() {
      ======================================================= */
 
   const visibleProducts = useMemo(() => {
+
     return PRODUCTS.filter((product) => {
+
       const matchesGender =
         gender === "All" ||
         product.gender === gender;
@@ -531,8 +591,12 @@ export default function Duka() {
         category === "All" ||
         product.category === category;
 
-      return matchesGender && matchesCategory;
+      return (
+        matchesGender &&
+        matchesCategory
+      );
     });
+
   }, [gender, category]);
 
   /* =======================================================
@@ -540,7 +604,9 @@ export default function Duka() {
      ======================================================= */
 
   function changeGender(newGender) {
+
     setGender(newGender);
+
     setCategory("All");
   }
 
@@ -549,19 +615,25 @@ export default function Duka() {
      ======================================================= */
 
   function addToCart(product) {
+
     setCart((currentCart) => {
-      const existing = currentCart.find(
-        (item) => item.id === product.id
-      );
+
+      const existing =
+        currentCart.find(
+          (item) =>
+            item.id === product.id
+        );
 
       if (existing) {
-        return currentCart.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                qty: item.qty + 1,
-              }
-            : item
+
+        return currentCart.map(
+          (item) =>
+            item.id === product.id
+              ? {
+                  ...item,
+                  qty: item.qty + 1,
+                }
+              : item
         );
       }
 
@@ -582,27 +654,34 @@ export default function Duka() {
      ======================================================= */
 
   function changeQty(id, amount) {
+
     setCart((currentCart) =>
       currentCart
         .map((item) =>
           item.id === id
             ? {
                 ...item,
-                qty: item.qty + amount,
+                qty:
+                  item.qty + amount,
               }
             : item
         )
-        .filter((item) => item.qty > 0)
+        .filter(
+          (item) =>
+            item.qty > 0
+        )
     );
   }
 
   /* =======================================================
-     CART TOTAL
+     TOTAL
      ======================================================= */
 
   const total = cart.reduce(
     (sum, item) =>
-      sum + item.price * item.qty,
+      sum +
+      item.price *
+        item.qty,
     0
   );
 
@@ -613,31 +692,84 @@ export default function Duka() {
   );
 
   /* =======================================================
-     WHATSAPP
+     PAYMENT / WHATSAPP
      ======================================================= */
 
-  function checkoutOnWhatsapp() {
-    if (cart.length === 0) return;
+  function confirmPaymentOrder() {
 
-    const lines = cart.map(
-      (item) =>
-        `• ${item.name} x${item.qty} — ${formatKES(
-          item.price * item.qty
-        )}`
-    );
+    if (cart.length === 0)
+      return;
+
+    const lines =
+      cart.map(
+        (item) =>
+          `• ${item.name} x${item.qty} — ${formatKES(
+            item.price *
+              item.qty
+          )}`
+      );
+
+    let paymentDetails = "";
+
+    if (
+      paymentMethod ===
+      "SEND MONEY"
+    ) {
+
+      paymentDetails =
+        `Send Money number: ${STORE_DETAILS.phone}`;
+
+    } else {
+
+      paymentDetails =
+        `M-PESA Till/Paybill: ${STORE_DETAILS.mpesaNumber}`;
+    }
 
     const message = [
-      "Hi! I'd like to order:",
+      "Hi Duka la Style! I'd like to place an order.",
+      "",
       ...lines,
       "",
       `Total: ${formatKES(total)}`,
+      "",
+      `Payment method: ${paymentMethod}`,
+      paymentDetails,
+      transactionCode
+        ? `Transaction code: ${transactionCode}`
+        : "Transaction code: Pending",
     ].join("\n");
 
     const url =
       `https://wa.me/${WHATSAPP_NUMBER}` +
-      `?text=${encodeURIComponent(message)}`;
+      `?text=${encodeURIComponent(
+        message
+      )}`;
 
-    window.open(url, "_blank");
+    window.open(
+      url,
+      "_blank"
+    );
+  }
+
+  /* =======================================================
+     GENERAL WHATSAPP
+     ======================================================= */
+
+  function contactWhatsApp() {
+
+    const message =
+      "Hi! I'd like some help choosing clothes.";
+
+    const url =
+      `https://wa.me/${WHATSAPP_NUMBER}` +
+      `?text=${encodeURIComponent(
+        message
+      )}`;
+
+    window.open(
+      url,
+      "_blank"
+    );
   }
 
   /* =======================================================
@@ -648,11 +780,14 @@ export default function Duka() {
     <div
       className="min-h-screen bg-[#F3E9DA] text-[#2B2620]"
       style={{
-        fontFamily: "'Work Sans', sans-serif",
+        fontFamily:
+          "'Work Sans', sans-serif",
       }}
     >
 
-      {/* FONTS */}
+      {/* ===================================================
+          FONTS
+          =================================================== */}
 
       <link
         rel="preconnect"
@@ -664,7 +799,9 @@ export default function Duka() {
         rel="stylesheet"
       />
 
-      {/* HEADER */}
+      {/* ===================================================
+          HEADER
+          =================================================== */}
 
       <header className="sticky top-0 z-30 bg-[#1C2541] text-[#F3E9DA]">
 
@@ -675,7 +812,8 @@ export default function Duka() {
             <span
               className="text-2xl"
               style={{
-                fontFamily: "'Fraunces', serif",
+                fontFamily:
+                  "'Fraunces', serif",
               }}
             >
               Duka
@@ -684,7 +822,8 @@ export default function Duka() {
             <span
               className="text-2xl text-[#E8A63D]"
               style={{
-                fontFamily: "'Fraunces', serif",
+                fontFamily:
+                  "'Fraunces', serif",
               }}
             >
               la Style
@@ -693,9 +832,12 @@ export default function Duka() {
           </div>
 
           <button
-            onClick={() => setCartOpen(true)}
+            onClick={() =>
+              setCartOpen(true)
+            }
             className="relative flex items-center gap-2 border border-[#F3E9DA]/30 px-3 py-2 hover:bg-[#F3E9DA]/10 transition-colors"
           >
+
             <ShoppingBag size={18} />
 
             <span className="text-sm hidden sm:inline">
@@ -707,13 +849,16 @@ export default function Duka() {
                 {itemCount}
               </span>
             )}
+
           </button>
 
         </div>
 
       </header>
 
-      {/* HERO */}
+      {/* ===================================================
+          HERO
+          =================================================== */}
 
       <section className="max-w-5xl mx-auto px-5 pt-14 pb-10">
 
@@ -727,7 +872,8 @@ export default function Duka() {
           <span
             className="text-xs uppercase tracking-[0.2em] text-[#BC5B39]"
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily:
+                "'JetBrains Mono', monospace",
             }}
           >
             Fresh bale, opened this week
@@ -738,7 +884,8 @@ export default function Duka() {
         <h1
           className="text-4xl sm:text-5xl leading-[1.05] mb-4"
           style={{
-            fontFamily: "'Fraunces', serif",
+            fontFamily:
+              "'Fraunces', serif",
           }}
         >
           Curated secondhand,
@@ -747,82 +894,102 @@ export default function Duka() {
           <span className="text-[#BC5B39]">
             styled for everyone.
           </span>
+
         </h1>
 
         <p className="text-[#2B2620]/70 max-w-md text-[15px]">
-          Quality secondhand clothing for men,
-          women and children — hand-picked and
-          graded so you don't have to dig through piles.
+          Quality secondhand clothing for
+          men, women and children —
+          hand-picked and graded so you
+          don't have to dig through piles.
         </p>
 
       </section>
 
-      {/* GENDER */}
+      {/* ===================================================
+          GENDER
+          =================================================== */}
 
       <div className="max-w-5xl mx-auto px-5 mb-5">
 
         <div className="flex gap-2 overflow-x-auto pb-1">
 
           {genders.map((item) => (
+
             <button
               key={item}
-              onClick={() => changeGender(item)}
+              onClick={() =>
+                changeGender(item)
+              }
               className={`whitespace-nowrap px-5 py-3 text-sm uppercase tracking-wide border transition-colors ${
                 gender === item
                   ? "bg-[#1C2541] text-[#F3E9DA] border-[#1C2541]"
                   : "border-[#1C2541]/20 text-[#1C2541]/70 hover:border-[#1C2541]/50"
               }`}
               style={{
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily:
+                  "'JetBrains Mono', monospace",
               }}
             >
               {item}
             </button>
+
           ))}
 
         </div>
 
       </div>
 
-      {/* CATEGORIES */}
+      {/* ===================================================
+          CATEGORIES
+          =================================================== */}
 
       <div className="max-w-5xl mx-auto px-5 mb-7">
 
         <div className="flex gap-2 overflow-x-auto pb-1">
 
           {categories.map((item) => (
+
             <button
               key={item}
-              onClick={() => setCategory(item)}
+              onClick={() =>
+                setCategory(item)
+              }
               className={`whitespace-nowrap text-xs uppercase tracking-wide px-3 py-2 border transition-colors ${
                 category === item
                   ? "bg-[#BC5B39] text-[#F3E9DA] border-[#BC5B39]"
                   : "border-[#1C2541]/20 text-[#1C2541]/70 hover:border-[#1C2541]/50"
               }`}
               style={{
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily:
+                  "'JetBrains Mono', monospace",
               }}
             >
               {item}
             </button>
+
           ))}
 
         </div>
 
       </div>
 
-      {/* PRODUCT COUNT */}
+      {/* ===================================================
+          PRODUCT COUNT
+          =================================================== */}
 
       <div className="max-w-5xl mx-auto px-5 mb-4">
 
         <p
           className="text-xs uppercase tracking-wide text-[#1C2541]/50"
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily:
+              "'JetBrains Mono', monospace",
           }}
         >
           {visibleProducts.length}{" "}
-          {visibleProducts.length === 1
+          {visibleProducts.length ===
+          1
             ? "item"
             : "items"}{" "}
           available
@@ -830,11 +997,15 @@ export default function Duka() {
 
       </div>
 
-      {/* PRODUCTS */}
+      {/* ===================================================
+          PRODUCTS
+          =================================================== */}
 
       <main className="max-w-5xl mx-auto px-5 pb-24">
 
-        {visibleProducts.length === 0 ? (
+        {visibleProducts.length ===
+        0 ? (
+
           <div className="py-20 text-center">
 
             <Tag
@@ -845,7 +1016,8 @@ export default function Duka() {
             <h2
               className="text-2xl text-[#1C2541]"
               style={{
-                fontFamily: "'Fraunces', serif",
+                fontFamily:
+                  "'Fraunces', serif",
               }}
             >
               Nothing here yet
@@ -856,71 +1028,238 @@ export default function Duka() {
             </p>
 
           </div>
+
         ) : (
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
-            {visibleProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAdd={addToCart}
-              />
-            ))}
+            {visibleProducts.map(
+              (product) => (
+
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAdd={addToCart}
+                />
+
+              )
+            )}
 
           </div>
+
         )}
 
       </main>
 
-      {/* FOOTER */}
+      {/* ===================================================
+          CONTACT US
+          =================================================== */}
 
-      <footer className="bg-[#1C2541] text-[#F3E9DA]">
+      <footer
+        id="contact"
+        className="bg-[#1C2541] text-[#F3E9DA]"
+      >
 
-        <div className="max-w-5xl mx-auto px-5 py-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="max-w-5xl mx-auto px-5 py-14">
 
-          <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
-            <h2
-              className="text-2xl mb-1"
-              style={{
-                fontFamily: "'Fraunces', serif",
-              }}
-            >
-              Need help finding a look?
-            </h2>
+            {/* LEFT */}
 
-            <p className="text-[#F3E9DA]/60 text-sm">
-              Message us and we'll help you find
-              something within your style and budget.
-            </p>
+            <div>
+
+              <div className="flex items-center gap-2 mb-4">
+
+                <MessageCircle
+                  size={18}
+                  className="text-[#E8A63D]"
+                />
+
+                <span
+                  className="text-xs uppercase tracking-[0.2em] text-[#E8A63D]"
+                  style={{
+                    fontFamily:
+                      "'JetBrains Mono', monospace",
+                  }}
+                >
+                  Contact us
+                </span>
+
+              </div>
+
+              <h2
+                className="text-3xl mb-3"
+                style={{
+                  fontFamily:
+                    "'Fraunces', serif",
+                }}
+              >
+                Need help finding
+                <br />
+                your next look?
+              </h2>
+
+              <p className="text-[#F3E9DA]/60 text-sm max-w-sm">
+                Have a question about sizing,
+                availability, payment or
+                delivery? We're happy to help.
+              </p>
+
+              <button
+                onClick={contactWhatsApp}
+                className="mt-6 flex items-center gap-2 bg-[#E8A63D] text-[#1C2541] px-5 py-3 text-sm uppercase tracking-wide font-medium hover:bg-[#f0b658] transition-colors"
+              >
+                <MessageCircle size={16} />
+                Chat on WhatsApp
+              </button>
+
+            </div>
+
+            {/* RIGHT */}
+
+            <div className="flex flex-col gap-3">
+
+              {/* WHATSAPP */}
+
+              <a
+                href={`https://wa.me/${STORE_DETAILS.whatsapp}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-4 border border-[#F3E9DA]/15 p-4 hover:bg-[#F3E9DA]/10 transition-colors"
+              >
+
+                <MessageCircle
+                  size={20}
+                  className="text-[#E8A63D]"
+                />
+
+                <div>
+
+                  <div className="text-xs text-[#F3E9DA]/50 uppercase">
+                    WhatsApp
+                  </div>
+
+                  <div className="text-sm mt-1">
+                    Chat with us
+                  </div>
+
+                </div>
+
+              </a>
+
+              {/* PHONE */}
+
+              <a
+                href={`tel:${STORE_DETAILS.phone}`}
+                className="flex items-center gap-4 border border-[#F3E9DA]/15 p-4 hover:bg-[#F3E9DA]/10 transition-colors"
+              >
+
+                <span className="text-xl">
+                  📞
+                </span>
+
+                <div>
+
+                  <div className="text-xs text-[#F3E9DA]/50 uppercase">
+                    Phone
+                  </div>
+
+                  <div className="text-sm mt-1">
+                    {STORE_DETAILS.phone}
+                  </div>
+
+                </div>
+
+              </a>
+
+              {/* LOCATION */}
+
+              <div className="flex items-center gap-4 border border-[#F3E9DA]/15 p-4">
+
+                <span className="text-xl">
+                  📍
+                </span>
+
+                <div>
+
+                  <div className="text-xs text-[#F3E9DA]/50 uppercase">
+                    Location
+                  </div>
+
+                  <div className="text-sm mt-1">
+                    {STORE_DETAILS.location}
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* HOURS */}
+
+              <div className="flex items-center gap-4 border border-[#F3E9DA]/15 p-4">
+
+                <span className="text-xl">
+                  🕐
+                </span>
+
+                <div>
+
+                  <div className="text-xs text-[#F3E9DA]/50 uppercase">
+                    Opening hours
+                  </div>
+
+                  <div className="text-sm mt-1">
+                    {STORE_DETAILS.hours}
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
 
           </div>
 
-          <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-              "Hi! I'd like some help choosing clothes."
-            )}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 bg-[#E8A63D] text-[#1C2541] px-5 py-3 text-sm uppercase tracking-wide font-medium hover:bg-[#f0b658] transition-colors whitespace-nowrap"
-          >
-            <MessageCircle size={16} />
-            Chat on WhatsApp
-          </a>
+          {/* FOOTER BOTTOM */}
+
+          <div className="border-t border-[#F3E9DA]/10 mt-10 pt-6">
+
+            <div className="flex flex-col sm:flex-row justify-between gap-3">
+
+              <p className="text-xs text-[#F3E9DA]/40">
+                © {new Date().getFullYear()} Duka la Style
+              </p>
+
+              <p className="text-xs text-[#F3E9DA]/40">
+                Quality secondhand. Styled for everyone.
+              </p>
+
+            </div>
+
+          </div>
 
         </div>
 
       </footer>
 
-      {/* CART */}
+      {/* ===================================================
+          CART
+          =================================================== */}
 
       {cartOpen && (
+
         <div className="fixed inset-0 z-40 flex justify-end">
+
+          {/* OVERLAY */}
 
           <div
             className="absolute inset-0 bg-black/40"
-            onClick={() => setCartOpen(false)}
+            onClick={() =>
+              setCartOpen(false)
+            }
           />
+
+          {/* CART PANEL */}
 
           <div className="relative w-full max-w-sm h-full bg-[#F3E9DA] flex flex-col">
 
@@ -931,14 +1270,17 @@ export default function Duka() {
               <h3
                 className="text-lg"
                 style={{
-                  fontFamily: "'Fraunces', serif",
+                  fontFamily:
+                    "'Fraunces', serif",
                 }}
               >
                 Your bag
               </h3>
 
               <button
-                onClick={() => setCartOpen(false)}
+                onClick={() =>
+                  setCartOpen(false)
+                }
                 className="p-1 hover:bg-[#1C2541]/5"
               >
                 <X size={20} />
@@ -951,13 +1293,20 @@ export default function Duka() {
             <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
 
               {cart.length === 0 && (
+
                 <p className="text-sm text-[#2B2620]/50 flex items-center gap-2 mt-4">
+
                   <Tag size={14} />
-                  Nothing here yet — add a piece to get started.
+
+                  Nothing here yet —
+                  add a piece to get started.
+
                 </p>
+
               )}
 
               {cart.map((item) => (
+
                 <div
                   key={item.id}
                   className="flex items-center gap-3"
@@ -991,7 +1340,10 @@ export default function Duka() {
 
                     <button
                       onClick={() =>
-                        changeQty(item.id, -1)
+                        changeQty(
+                          item.id,
+                          -1
+                        )
                       }
                       className="p-1.5 hover:bg-[#1C2541]/5"
                     >
@@ -1004,7 +1356,10 @@ export default function Duka() {
 
                     <button
                       onClick={() =>
-                        changeQty(item.id, 1)
+                        changeQty(
+                          item.id,
+                          1
+                        )
                       }
                       className="p-1.5 hover:bg-[#1C2541]/5"
                     >
@@ -1014,11 +1369,12 @@ export default function Duka() {
                   </div>
 
                 </div>
+
               ))}
 
             </div>
 
-            {/* TOTAL */}
+            {/* CART TOTAL */}
 
             <div className="px-5 py-4 border-t border-[#1C2541]/10">
 
@@ -1041,12 +1397,19 @@ export default function Duka() {
               </div>
 
               <button
-                onClick={checkoutOnWhatsapp}
-                disabled={cart.length === 0}
-                className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 text-sm uppercase tracking-wide font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#20bd5a] transition-colors"
+                onClick={() =>
+                  setPaymentOpen(true)
+                }
+                disabled={
+                  cart.length === 0
+                }
+                className="w-full flex items-center justify-center gap-2 bg-[#1C2541] text-[#F3E9DA] py-3 text-sm uppercase tracking-wide font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#2B3654] transition-colors"
               >
-                <MessageCircle size={16} />
-                Order via WhatsApp
+
+                <ShoppingBag size={16} />
+
+                Continue to Payment
+
               </button>
 
             </div>
@@ -1054,6 +1417,304 @@ export default function Duka() {
           </div>
 
         </div>
+
+      )}
+
+      {/* ===================================================
+          PAYMENT MODAL
+          =================================================== */}
+
+      {paymentOpen && (
+
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+
+          {/* OVERLAY */}
+
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() =>
+              setPaymentOpen(false)
+            }
+          />
+
+          {/* PAYMENT BOX */}
+
+          <div className="relative w-full max-w-md bg-[#F3E9DA] shadow-2xl max-h-[90vh] overflow-y-auto">
+
+            {/* PAYMENT HEADER */}
+
+            <div className="flex items-center justify-between px-5 py-4 bg-[#1C2541] text-[#F3E9DA]">
+
+              <div>
+
+                <h3
+                  className="text-xl"
+                  style={{
+                    fontFamily:
+                      "'Fraunces', serif",
+                  }}
+                >
+                  Payment
+                </h3>
+
+                <p className="text-xs text-[#F3E9DA]/60 mt-1">
+                  Complete your order
+                </p>
+
+              </div>
+
+              <button
+                onClick={() =>
+                  setPaymentOpen(false)
+                }
+                className="p-1 hover:bg-white/10"
+              >
+                <X size={20} />
+              </button>
+
+            </div>
+
+            {/* PAYMENT CONTENT */}
+
+            <div className="p-5">
+
+              {/* ORDER TOTAL */}
+
+              <div className="border border-[#1C2541]/10 p-4 mb-5">
+
+                <div className="text-xs uppercase tracking-wide text-[#1C2541]/50">
+                  Order total
+                </div>
+
+                <div
+                  className="text-2xl font-semibold mt-1"
+                  style={{
+                    fontFamily:
+                      "'JetBrains Mono', monospace",
+                  }}
+                >
+                  {formatKES(total)}
+                </div>
+
+              </div>
+
+              {/* PAYMENT METHOD */}
+
+              <label
+                className="text-xs uppercase tracking-wide text-[#1C2541]/60"
+                style={{
+                  fontFamily:
+                    "'JetBrains Mono', monospace",
+                }}
+              >
+                Choose payment method
+              </label>
+
+              <div className="grid grid-cols-2 gap-2 mt-2">
+
+                {/* M-PESA */}
+
+                <button
+                  onClick={() =>
+                    setPaymentMethod(
+                      "M-PESA"
+                    )
+                  }
+                  className={`p-4 border text-left transition-colors ${
+                    paymentMethod ===
+                    "M-PESA"
+                      ? "border-[#BC5B39] bg-[#BC5B39]/10"
+                      : "border-[#1C2541]/15"
+                  }`}
+                >
+
+                  <div className="font-semibold text-[#1C2541]">
+                    M-PESA
+                  </div>
+
+                  <div className="text-xs text-[#1C2541]/60 mt-1">
+                    Till / Paybill
+                  </div>
+
+                </button>
+
+                {/* SEND MONEY */}
+
+                <button
+                  onClick={() =>
+                    setPaymentMethod(
+                      "SEND MONEY"
+                    )
+                  }
+                  className={`p-4 border text-left transition-colors ${
+                    paymentMethod ===
+                    "SEND MONEY"
+                      ? "border-[#BC5B39] bg-[#BC5B39]/10"
+                      : "border-[#1C2541]/15"
+                  }`}
+                >
+
+                  <div className="font-semibold text-[#1C2541]">
+                    Send Money
+                  </div>
+
+                  <div className="text-xs text-[#1C2541]/60 mt-1">
+                    Phone number
+                  </div>
+
+                </button>
+
+              </div>
+
+              {/* =================================================
+                  M-PESA TILL / PAYBILL
+                  ================================================= */}
+
+              {paymentMethod ===
+                "M-PESA" && (
+
+                <div className="mt-4 bg-[#E8DDCB] p-4">
+
+                  <div
+                    className="text-xs uppercase tracking-wide text-[#BC5B39] mb-2"
+                    style={{
+                      fontFamily:
+                        "'JetBrains Mono', monospace",
+                    }}
+                  >
+                    M-PESA payment
+                  </div>
+
+                  <p className="text-sm text-[#1C2541]/80">
+                    Pay using M-PESA:
+                  </p>
+
+                  <p
+                    className="text-lg font-bold mt-1"
+                    style={{
+                      fontFamily:
+                        "'JetBrains Mono', monospace",
+                    }}
+                  >
+                    {
+                      STORE_DETAILS.mpesaNumber
+                    }
+                  </p>
+
+                </div>
+
+              )}
+
+              {/* =================================================
+                  SEND MONEY
+                  ================================================= */}
+
+              {paymentMethod ===
+                "SEND MONEY" && (
+
+                <div className="mt-4 bg-[#E8DDCB] p-4">
+
+                  <div
+                    className="text-xs uppercase tracking-wide text-[#BC5B39] mb-2"
+                    style={{
+                      fontFamily:
+                        "'JetBrains Mono', monospace",
+                    }}
+                  >
+                    Send Money
+                  </div>
+
+                  <p className="text-sm text-[#1C2541]/80">
+                    Send the payment to:
+                  </p>
+
+                  <p
+                    className="text-xl font-bold mt-2"
+                    style={{
+                      fontFamily:
+                        "'JetBrains Mono', monospace",
+                    }}
+                  >
+                    0710574821
+                  </p>
+
+                  <div className="mt-3 text-xs text-[#1C2541]/60">
+
+                    Amount to send:
+
+                    <strong className="ml-1 text-[#1C2541]">
+
+                      {formatKES(total)}
+
+                    </strong>
+
+                  </div>
+
+                </div>
+
+              )}
+
+              {/* =================================================
+                  TRANSACTION CODE
+                  ================================================= */}
+
+              <div className="mt-5">
+
+                <label
+                  className="text-xs uppercase tracking-wide text-[#1C2541]/60"
+                  style={{
+                    fontFamily:
+                      "'JetBrains Mono', monospace",
+                  }}
+                >
+                  M-PESA transaction code
+                </label>
+
+                <input
+                  type="text"
+                  value={transactionCode}
+                  onChange={(e) =>
+                    setTransactionCode(
+                      e.target.value.toUpperCase()
+                    )
+                  }
+                  placeholder="e.g. QWE123ABC"
+                  className="w-full mt-2 border border-[#1C2541]/20 bg-white/40 px-3 py-3 outline-none focus:border-[#BC5B39]"
+                />
+
+              </div>
+
+              {/* =================================================
+                  ORDER BUTTON
+                  ================================================= */}
+
+              <button
+                onClick={
+                  confirmPaymentOrder
+                }
+                className="w-full mt-5 flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 text-sm uppercase tracking-wide font-medium hover:bg-[#20bd5a] transition-colors"
+              >
+
+                <MessageCircle size={16} />
+
+                Confirm Order on WhatsApp
+
+              </button>
+
+              <p className="text-[11px] text-center text-[#1C2541]/50 mt-3">
+
+                Your order details and
+                payment information will
+                be sent to us on WhatsApp.
+
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
       )}
 
     </div>
