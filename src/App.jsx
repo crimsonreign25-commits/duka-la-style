@@ -60,7 +60,7 @@ const PRODUCTS = [
   },
 ];
 
-const WHATSAPP_NUMBER = "254700000000"; // placeholder — swap for the real business number
+const WHATSAPP_NUMBER = "254710574821"; // placeholder — swap for the real business number
 
 function formatKES(n) {
   return "KSh " + n.toLocaleString("en-KE");
