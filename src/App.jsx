@@ -1,4 +1,4 @@
-hereimport React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { ShoppingBag, X, Plus, Minus, MessageCircle, Sparkles, Tag } from "lucide-react";
 
 const PRODUCTS = [
@@ -306,4 +306,4 @@ export default function Duka() {
       )}
     </div>
   );
-        }
+}
