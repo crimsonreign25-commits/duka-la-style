@@ -9,7 +9,7 @@ const PRODUCTS = [
     category: "Dresses",
     price: 800,
     was: 1200,
-    image: "https://picsum.photos/seed/dress1/400/500",
+    image: "https://source.unsplash.com/400x500/?dress,fashion",
     note: "First pick of the bale — soft cotton blend.",
   },
   {
@@ -18,7 +18,7 @@ const PRODUCTS = [
     grade: "Grade 1",
     category: "Denim",
     price: 700,
-    image: "https://picsum.photos/seed/jeans1/400/500",
+    image: "https://source.unsplash.com/400x500/?jeans,denim",
     note: "Stretch fit, true to size.",
   },
   {
@@ -27,7 +27,7 @@ const PRODUCTS = [
     grade: "Grade 1 · Cream",
     category: "Outerwear",
     price: 1500,
-    image: "https://picsum.photos/seed/jacket1/400/500",
+    image: "https://source.unsplash.com/400x500/?denim-jacket",
     note: "Classic fit, layers well over anything.",
   },
   {
@@ -36,7 +36,7 @@ const PRODUCTS = [
     grade: "Grade 1",
     category: "Skirts",
     price: 600,
-    image: "https://picsum.photos/seed/skirt1/400/500",
+    image: "https://source.unsplash.com/400x500/?skirt,fashion",
     note: "Bold print, great for events.",
   },
   {
@@ -45,7 +45,7 @@ const PRODUCTS = [
     grade: "Grade 2",
     category: "Trousers",
     price: 500,
-    image: "https://picsum.photos/seed/trousers1/400/500",
+    image: "https://source.unsplash.com/400x500/?trousers,fashion",
     note: "Office-ready, comfortable fit.",
   },
 ];
