@@ -7,12 +7,9 @@ import {
   MessageCircle,
   Sparkles,
   Tag,
-  Copy,
-  Check,
   CreditCard,
   Phone,
   ShieldCheck,
-  Loader2,
 } from "lucide-react";
 
 /* =========================================================
@@ -22,13 +19,18 @@ import {
 const WHATSAPP_NUMBER = "254710574821";
 
 /*
-  LIVE PAYMENT INTEGRATION PLACEHOLDER
+  LIVE M-PESA INTEGRATION
 
-  When the store owner/authorized developer connects
-  the real payment provider, this is where the frontend
-  will communicate with the secure backend.
+  The real Daraja connection will be made through a secure
+  Vercel server/API later.
 
-  DO NOT put payment secrets in this file.
+  NEVER put:
+  - Consumer Key
+  - Consumer Secret
+  - Passkeys
+  - Other payment secrets
+
+  inside this React file.
 */
 
 /* =========================================================
@@ -331,18 +333,6 @@ function formatKES(number) {
   return "KSh " + Number(number).toLocaleString("en-KE");
 }
 
-function createDemoReceipt() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-  let result = "";
-
-  for (let i = 0; i < 10; i++) {
-    result += chars[Math.floor(Math.random() * chars.length)];
-  }
-
-  return result;
-}
-
 function Tag_({ children }) {
   return (
     <span className="inline-flex items-center gap-1 text-[11px] uppercase px-2 py-1 bg-[#BC5B39] text-[#F3E9DA]">
@@ -431,66 +421,52 @@ function ProductCard({ product, onAdd }) {
    PAYMENT SECTION
 ========================================================= */
 
-function PaymentSection({
-  total,
-  cart,
-  onPaymentSuccess,
-}) {
+function PaymentSection({ total, cart }) {
   const [phone, setPhone] = useState("");
-  const [status, setStatus] = useState("idle");
-  const [receipt, setReceipt] = useState("");
-  const [copied, setCopied] = useState(false);
 
-  /*
-    DEMO PAYMENT
-
-    This simulates the checkout interface only.
-    It does NOT contact M-Pesa or move real money.
-
-    The authorized payment integration can later
-    replace startPayment().
-  */
-
-  function startPayment() {
+  function handlePayment() {
     if (cart.length === 0) {
       alert("Your bag is empty.");
       return;
     }
 
     if (!phone.trim()) {
-      alert("Please enter your phone number.");
+      alert("Please enter your M-Pesa phone number.");
       return;
     }
 
-    setStatus("processing");
+    /*
+      FUTURE LIVE M-PESA CONNECTION
 
-    setTimeout(() => {
-      const demoReceipt = createDemoReceipt();
+      The owner/developer will eventually replace this
+      section with a call to the secure Vercel API:
 
-      setReceipt(demoReceipt);
-      setStatus("success");
+      fetch("/api/mpesa/stkpush", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone,
+          amount: total,
+        }),
+      });
 
-      onPaymentSuccess(demoReceipt);
-    }, 1800);
-  }
+      The API will communicate with Safaricom Daraja.
 
-  function resetPayment() {
-    setStatus("idle");
-    setReceipt("");
-  }
+      NEVER put Daraja secrets in App.jsx.
+    */
 
-  function copyReceipt() {
-    navigator.clipboard.writeText(receipt);
-
-    setCopied(true);
-
-    setTimeout(() => {
-      setCopied(false);
-    }, 1500);
+    alert(
+      "M-Pesa payment is not connected yet. The store owner needs to connect their Daraja account before live payments can be accepted."
+    );
   }
 
   return (
-    <section className="max-w-5xl mx-auto px-5 pb-16">
+    <section
+      id="payment"
+      className="max-w-5xl mx-auto px-5 pb-16"
+    >
 
       <div className="bg-[#1C2541] text-[#F3E9DA] p-6 sm:p-8">
 
@@ -502,7 +478,7 @@ function PaymentSection({
           />
 
           <span className="text-xs uppercase tracking-[0.2em] text-[#E8A63D]">
-            Secure checkout
+            M-Pesa checkout
           </span>
 
         </div>
@@ -512,187 +488,105 @@ function PaymentSection({
         </h2>
 
         <p className="text-sm text-[#F3E9DA]/60 mb-6">
-          Enter your phone number to continue.
+          Enter your M-Pesa number below. Once the live
+          M-Pesa connection is activated, you will receive
+          a payment prompt on your phone.
         </p>
 
-        {/* IDLE */}
+        <div className="grid sm:grid-cols-2 gap-4">
 
-        {status === "idle" && (
-          <>
+          {/* AMOUNT */}
 
-            <div className="grid sm:grid-cols-2 gap-4">
+          <div className="border border-[#F3E9DA]/20 p-5">
 
-              <div className="border border-[#F3E9DA]/20 p-5">
+            <div className="text-xs uppercase opacity-50 mb-2">
+              Amount to pay
+            </div>
 
-                <div className="text-xs uppercase opacity-50 mb-2">
-                  Amount to pay
-                </div>
+            <div className="text-3xl font-bold text-[#E8A63D]">
+              {formatKES(total)}
+            </div>
 
-                <div className="text-3xl font-bold text-[#E8A63D]">
-                  {formatKES(total)}
-                </div>
+          </div>
 
-              </div>
+          {/* PHONE */}
 
-              <div className="border border-[#F3E9DA]/20 p-5">
+          <div className="border border-[#F3E9DA]/20 p-5">
 
-                <div className="text-xs uppercase opacity-50 mb-2">
-                  M-Pesa phone number
-                </div>
+            <div className="text-xs uppercase opacity-50 mb-2">
+              M-Pesa phone number
+            </div>
 
-                <div className="relative">
+            <div className="relative">
 
-                  <Phone
-                    size={17}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50"
-                  />
+              <Phone
+                size={17}
+                className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50"
+              />
 
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) =>
-                      setPhone(e.target.value)
-                    }
-                    placeholder="0710574821"
-                    className="w-full bg-[#F3E9DA] text-[#1C2541] pl-10 pr-3 py-3 outline-none"
-                  />
-
-                </div>
-
-              </div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) =>
+                  setPhone(e.target.value)
+                }
+                placeholder="0710574821"
+                inputMode="numeric"
+                autoComplete="tel"
+                className="w-full bg-[#F3E9DA] text-[#1C2541] pl-10 pr-3 py-3 outline-none"
+              />
 
             </div>
 
-            <button
-              onClick={startPayment}
-              disabled={cart.length === 0}
-              className="mt-5 w-full flex items-center justify-center gap-2 py-3.5 bg-[#E8A63D] text-[#1C2541] font-semibold uppercase tracking-wide disabled:opacity-40 hover:bg-[#f0b658]"
-            >
-              <CreditCard size={17} />
-              Pay {formatKES(total)}
-            </button>
+          </div>
 
-            <div className="flex items-center gap-2 text-xs text-[#F3E9DA]/40 mt-4">
-              <ShieldCheck size={15} />
-              Your payment details are not stored in this demo.
-            </div>
+        </div>
 
-          </>
-        )}
+        {/* PAYMENT BUTTON */}
 
-        {/* PROCESSING */}
+        <button
+          onClick={handlePayment}
+          disabled={cart.length === 0}
+          className="mt-5 w-full flex items-center justify-center gap-2 py-3.5 bg-[#E8A63D] text-[#1C2541] font-semibold uppercase tracking-wide disabled:opacity-40 hover:bg-[#f0b658]"
+        >
 
-        {status === "processing" && (
-          <div className="border border-[#F3E9DA]/20 p-8 text-center">
+          <CreditCard size={17} />
 
-            <Loader2
-              size={38}
-              className="mx-auto mb-4 animate-spin text-[#E8A63D]"
+          Pay {formatKES(total)}
+
+        </button>
+
+        {/* SECURITY MESSAGE */}
+
+        <div className="mt-5 border border-[#E8A63D]/30 bg-[#E8A63D]/10 p-4">
+
+          <div className="flex items-start gap-3">
+
+            <ShieldCheck
+              size={20}
+              className="text-[#E8A63D] mt-0.5"
             />
 
-            <h3 className="text-xl mb-2">
-              Processing payment
-            </h3>
+            <div>
 
-            <p className="text-sm text-[#F3E9DA]/60">
-              Please wait while your payment is being processed.
-            </p>
+              <p className="text-sm font-medium">
+                Secure M-Pesa payment
+              </p>
 
-          </div>
-        )}
-
-        {/* SUCCESS */}
-
-        {status === "success" && (
-          <div className="border border-[#25D366]/30 bg-[#25D366]/10 p-6">
-
-            <div className="flex items-center gap-3 mb-5">
-
-              <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center">
-                <Check size={22} />
-              </div>
-
-              <div>
-                <h3 className="text-xl">
-                  Demo payment successful
-                </h3>
-
-                <p className="text-xs text-[#F3E9DA]/50">
-                  This is a demonstration checkout.
-                </p>
-              </div>
+              <p className="text-xs text-[#F3E9DA]/60 mt-1">
+                Live M-Pesa payments will be activated by
+                the store owner after connecting their
+                authorized Safaricom Daraja account.
+              </p>
 
             </div>
 
-            <div className="bg-[#F3E9DA] text-[#1C2541] p-5">
-
-              <div className="text-xs uppercase opacity-50 mb-2">
-                Demo receipt number
-              </div>
-
-              <div className="flex items-center justify-between gap-3">
-
-                <strong className="text-xl tracking-wider">
-                  {receipt}
-                </strong>
-
-                <button
-                  onClick={copyReceipt}
-                  className="p-2 bg-[#1C2541] text-[#F3E9DA]"
-                >
-                  {copied ? (
-                    <Check size={17} />
-                  ) : (
-                    <Copy size={17} />
-                  )}
-                </button>
-
-              </div>
-
-              <div className="border-t border-[#1C2541]/10 mt-4 pt-4 text-sm">
-
-                <div className="flex justify-between">
-                  <span className="opacity-50">
-                    Phone
-                  </span>
-
-                  <span>
-                    {phone}
-                  </span>
-                </div>
-
-                <div className="flex justify-between mt-2">
-                  <span className="opacity-50">
-                    Amount
-                  </span>
-
-                  <strong>
-                    {formatKES(total)}
-                  </strong>
-                </div>
-
-              </div>
-
-            </div>
-
-            <button
-              onClick={resetPayment}
-              className="mt-4 border border-[#F3E9DA]/20 px-4 py-2 text-sm uppercase"
-            >
-              Start another payment
-            </button>
-
           </div>
-        )}
 
-        <p className="text-xs text-[#F3E9DA]/30 mt-5">
-          Live payment processing is intentionally not included
-          in this demonstration. The store owner can connect
-          an authorized payment provider through the secure
-          server-side integration during handoff.
-        </p>
+        </div>
 
       </div>
+
     </section>
   );
 }
@@ -768,8 +662,6 @@ export default function Duka() {
 
   const [gender, setGender] = useState("All");
   const [category, setCategory] = useState("All");
-
-  const [orderReceipt, setOrderReceipt] = useState("");
 
   const genders = [
     "All",
@@ -890,37 +782,25 @@ export default function Duka() {
     );
   }
 
-  function handlePaymentSuccess(receipt) {
+  function goToPayment() {
 
-    setOrderReceipt(receipt);
+    setCartOpen(false);
 
-    const lines = cart.map(
-      (item) =>
-        `• ${item.name} x${item.qty} — ${formatKES(
-          item.price * item.qty
-        )}`
-    );
+    setTimeout(() => {
 
-    const message = [
-      "NEW DUKA LA STYLE ORDER",
-      "",
-      ...lines,
-      "",
-      `TOTAL: ${formatKES(total)}`,
-      `CUSTOMER PHONE: ${window.__DUKA_PHONE__ || "Provided at checkout"}`,
-      `DEMO RECEIPT: ${receipt}`,
-      "",
-      "Payment requires verification before fulfilment.",
-    ].join("\n");
+      const payment =
+        document.getElementById("payment");
 
-    const whatsappUrl =
-      `https://wa.me/${WHATSAPP_NUMBER}` +
-      `?text=${encodeURIComponent(message)}`;
+      if (payment) {
 
-    window.open(
-      whatsappUrl,
-      "_blank"
-    );
+        payment.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+
+      }
+
+    }, 100);
   }
 
   return (
@@ -932,9 +812,17 @@ export default function Duka() {
       }}
     >
 
+      {/* FONTS */}
+
       <link
         rel="preconnect"
         href="https://fonts.googleapis.com"
+      />
+
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
       />
 
       <link
@@ -942,7 +830,9 @@ export default function Duka() {
         rel="stylesheet"
       />
 
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <header className="sticky top-0 z-30 bg-[#1C2541] text-[#F3E9DA]">
 
@@ -985,7 +875,9 @@ export default function Duka() {
 
       </header>
 
-      {/* HERO */}
+      {/* =====================================================
+          HERO
+      ===================================================== */}
 
       <section className="max-w-5xl mx-auto px-5 pt-14 pb-10">
 
@@ -1021,7 +913,9 @@ export default function Duka() {
 
       </section>
 
-      {/* GENDER */}
+      {/* =====================================================
+          GENDER
+      ===================================================== */}
 
       <div className="max-w-5xl mx-auto px-5 mb-5">
 
@@ -1049,7 +943,9 @@ export default function Duka() {
 
       </div>
 
-      {/* CATEGORIES */}
+      {/* =====================================================
+          CATEGORIES
+      ===================================================== */}
 
       <div className="max-w-5xl mx-auto px-5 mb-7">
 
@@ -1077,7 +973,9 @@ export default function Duka() {
 
       </div>
 
-      {/* PRODUCTS */}
+      {/* =====================================================
+          PRODUCTS
+      ===================================================== */}
 
       <main className="max-w-5xl mx-auto px-5 pb-16">
 
@@ -1103,21 +1001,24 @@ export default function Duka() {
 
       </main>
 
-      {/* PAYMENT */}
+      {/* =====================================================
+          PAYMENT
+      ===================================================== */}
 
       <PaymentSection
         total={total}
         cart={cart}
-        onPaymentSuccess={
-          handlePaymentSuccess
-        }
       />
 
-      {/* CONTACT */}
+      {/* =====================================================
+          CONTACT
+      ===================================================== */}
 
       <ContactSection />
 
-      {/* FOOTER */}
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
 
       <footer className="bg-[#1C2541] text-[#F3E9DA]">
 
@@ -1129,11 +1030,15 @@ export default function Duka() {
 
       </footer>
 
-      {/* CART */}
+      {/* =====================================================
+          CART DRAWER
+      ===================================================== */}
 
       {cartOpen && (
 
         <div className="fixed inset-0 z-50 flex justify-end">
+
+          {/* BACKDROP */}
 
           <div
             className="absolute inset-0 bg-black/40"
@@ -1141,6 +1046,8 @@ export default function Duka() {
               setCartOpen(false)
             }
           />
+
+          {/* CART */}
 
           <div className="relative w-full max-w-sm h-full bg-[#F3E9DA] flex flex-col">
 
@@ -1156,6 +1063,7 @@ export default function Duka() {
                 onClick={() =>
                   setCartOpen(false)
                 }
+                aria-label="Close bag"
               >
                 <X size={20} />
               </button>
@@ -1204,6 +1112,8 @@ export default function Duka() {
 
                       </div>
 
+                      {/* QUANTITY */}
+
                       <div className="flex items-center border">
 
                         <button
@@ -1214,6 +1124,7 @@ export default function Duka() {
                             )
                           }
                           className="p-1.5"
+                          aria-label="Decrease quantity"
                         >
                           <Minus size={12} />
                         </button>
@@ -1230,6 +1141,7 @@ export default function Duka() {
                             )
                           }
                           className="p-1.5"
+                          aria-label="Increase quantity"
                         >
                           <Plus size={12} />
                         </button>
@@ -1261,30 +1173,19 @@ export default function Duka() {
 
               </div>
 
+              {/* GO TO PAYMENT */}
+
               <button
-                onClick={() => {
-
-                  setCartOpen(false);
-
-                  setTimeout(() => {
-
-                    window.scrollTo({
-                      top:
-                        document.body.scrollHeight,
-                      behavior:
-                        "smooth",
-                    });
-
-                  }, 100);
-
-                }}
+                onClick={goToPayment}
                 disabled={
                   cart.length === 0
                 }
-                className="w-full bg-[#BC5B39] text-white py-3 uppercase disabled:opacity-40"
+                className="w-full bg-[#BC5B39] text-white py-3 uppercase disabled:opacity-40 hover:bg-[#a94f31]"
               >
                 Go to Payment
               </button>
+
+              {/* WHATSAPP */}
 
               <button
                 onClick={() => {
@@ -1302,9 +1203,7 @@ export default function Duka() {
                     "Hi! I'd like to order:",
                     ...lines,
                     "",
-                    `Total: ${formatKES(
-                      total
-                    )}`,
+                    `Total: ${formatKES(total)}`,
                   ].join("\n");
 
                   window.open(
@@ -1318,7 +1217,7 @@ export default function Duka() {
                 disabled={
                   cart.length === 0
                 }
-                className="w-full mt-2 bg-[#25D366] text-white py-3 uppercase disabled:opacity-40"
+                className="w-full mt-2 bg-[#25D366] text-white py-3 uppercase disabled:opacity-40 hover:bg-[#20bd5b]"
               >
                 Order via WhatsApp
               </button>
