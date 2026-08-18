@@ -1,4 +1,9 @@
-import React, { useState, useMemo } from "react";
+    category: "Outerwear",
+    price: 1600,
+    was: 2200,
+    color: "#E8A63D",
+    note: "Sharp shoulders — great for interviews.",
+  },import React, { useState, useMemo } from "react";
 import { ShoppingBag, X, Plus, Minus, MessageCircle, Sparkles, Tag } from "lucide-react";
 
 const PRODUCTS = [
@@ -34,12 +39,7 @@ const PRODUCTS = [
     id: 4,
     name: "Mustard Blazer",
     grade: "Grade 1 · Cream",
-    category: "Outerwear",
-    price: 1600,
-    was: 2200,
-    color: "#E8A63D",
-    note: "Sharp shoulders — great for interviews.",
-  },
+
   {
     id: 5,
     name: "Ivory Slip Dress",
