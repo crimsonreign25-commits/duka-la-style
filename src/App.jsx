@@ -10,45 +10,116 @@ import {
 } from "lucide-react";
 
 /* =========================================================
-   RANDOM IMAGE SYSTEM
-   Images can change whenever the website is refreshed.
-========================================================= */
+   REFRESH IMAGE SYSTEM
+   ========================================================= */
 
-const REFRESH_SEED = Math.floor(Math.random() * 999999);
+const REFRESH_SEED = Math.floor(Math.random() * 1000000);
+
+const CLOTHING_IMAGES = {
+  menTrousers: [
+    "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  menShirts: [
+    "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1603252110481-7ba873bf42ab?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  menTshirts: [
+    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1583743814966-8936f37f4e6?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  menJackets: [
+    "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  menJeans: [
+    "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1475178626620-a4d074967452?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  menShorts: [
+    "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1565084888279-aca607ecce0c?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  womenDresses: [
+    "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  womenSkirts: [
+    "https://images.unsplash.com/photo-1583496661160-fb5886a13d27?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1582142306909-195724d33ffc?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  womenTrousers: [
+    "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1506629905607-d9f5b5d9b2c8?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  womenTops: [
+    "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1564257577054-0f3f4a1c0c65?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  womenJackets: [
+    "https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  womenJeans: [
+    "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1582418702059-97ebafb35d09?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  boys: [
+    "https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  girls: [
+    "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1525258946800-98cfd641d0de?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  kidsTrousers: [
+    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  kidsTshirts: [
+    "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=700&q=80",
+  ],
+
+  kidsShorts: [
+    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=700&q=80",
+    "https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=700&q=80",
+  ],
+};
 
 function clothingImage(type, id) {
-  const queries = {
-    menTrousers: "men,trousers,fashion",
-    menShirts: "men,shirt,fashion",
-    menTshirts: "men,tshirt,fashion",
-    menJackets: "men,jacket,fashion",
-    menJeans: "men,jeans,fashion",
-    menShorts: "men,shorts,fashion",
+  const images = CLOTHING_IMAGES[type];
 
-    womenDresses: "women,dress,fashion",
-    womenSkirts: "women,skirt,fashion",
-    womenTrousers: "women,trousers,fashion",
-    womenTops: "women,top,fashion",
-    womenJackets: "women,jacket,fashion",
-    womenJeans: "women,jeans,fashion",
+  if (!images || images.length === 0) {
+    return "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=700&q=80";
+  }
 
-    boys: "boys,clothing,fashion",
-    girls: "girls,clothing,fashion",
-    kidsTrousers: "children,trousers,fashion",
-    kidsTshirts: "children,tshirt,fashion",
-    kidsShorts: "children,shorts,fashion",
-  };
-
-  const query = queries[type] || "clothing,fashion";
-
-  return `https://loremflickr.com/600/700/${query}?lock=${
-    REFRESH_SEED + id
-  }`;
+  return images[(REFRESH_SEED + id) % images.length];
 }
 
 /* =========================================================
    PRODUCTS
-========================================================= */
+   ========================================================= */
 
 const PRODUCTS = [
   /* ================= MEN ================= */
@@ -126,7 +197,7 @@ const PRODUCTS = [
     name: "Floral Wrap Dress",
     gender: "Women",
     category: "Dresses",
-    grade: "Grade 1 · Cream",
+    grade: "Grade 1",
     price: 800,
     was: 1200,
     image: clothingImage("womenDresses", 7),
@@ -244,13 +315,48 @@ const PRODUCTS = [
     image: clothingImage("kidsShorts", 17),
     note: "Light and comfortable children's shorts.",
   },
+
+  /* EXTRA PRODUCTS */
+
+  {
+    id: 18,
+    name: "Men's Smart Trousers",
+    gender: "Men",
+    category: "Trousers",
+    grade: "Grade 1",
+    price: 850,
+    image: clothingImage("menTrousers", 18),
+    note: "Smart trousers suitable for work and occasions.",
+  },
+
+  {
+    id: 19,
+    name: "Women's Straight Trousers",
+    gender: "Women",
+    category: "Trousers",
+    grade: "Grade 1",
+    price: 700,
+    image: clothingImage("womenTrousers", 19),
+    note: "Simple straight-cut trousers.",
+  },
+
+  {
+    id: 20,
+    name: "Kids' Smart Trousers",
+    gender: "Kids",
+    category: "Trousers",
+    grade: "Grade 1",
+    price: 450,
+    image: clothingImage("kidsTrousers", 20),
+    note: "Smart comfortable trousers for children.",
+  },
 ];
 
 const WHATSAPP_NUMBER = "254710574821";
 
 /* =========================================================
-   PRICE FORMAT
-========================================================= */
+   FORMAT PRICE
+   ========================================================= */
 
 function formatKES(number) {
   return "KSh " + number.toLocaleString("en-KE");
@@ -258,7 +364,7 @@ function formatKES(number) {
 
 /* =========================================================
    TAG
-========================================================= */
+   ========================================================= */
 
 function Tag_({ children, tone = "clay" }) {
   const tones = {
@@ -281,15 +387,13 @@ function Tag_({ children, tone = "clay" }) {
 
 /* =========================================================
    PRODUCT CARD
-========================================================= */
+   ========================================================= */
 
 function ProductCard({ product, onAdd }) {
   const [imageError, setImageError] = useState(false);
 
   return (
     <div className="group relative bg-[#F3E9DA] border border-[#1C2541]/10 flex flex-col overflow-hidden">
-
-      {/* IMAGE */}
 
       <div className="relative h-64 overflow-hidden bg-[#E8DDCB]">
 
@@ -309,8 +413,6 @@ function ProductCard({ product, onAdd }) {
             </span>
           </div>
         )}
-
-        {/* PRICE */}
 
         <div
           className="absolute right-3 top-4 rotate-3 bg-[#F3E9DA] border border-[#1C2541]/20 px-3 py-2 shadow-sm"
@@ -334,21 +436,13 @@ function ProductCard({ product, onAdd }) {
         </div>
       </div>
 
-      {/* DETAILS */}
-
       <div className="p-4 flex flex-col gap-2 flex-1">
 
         <div className="flex gap-2 flex-wrap">
 
-          <Tag_
-            tone={
-              product.grade.includes("Cream")
-                ? "marigold"
-                : "clay"
-            }
-          >
+          <Tag_>
             {product.grade}
-          </Tag>
+          </Tag_>
 
           <span
             className="text-[11px] uppercase tracking-wide text-[#1C2541]/50"
@@ -389,7 +483,7 @@ function ProductCard({ product, onAdd }) {
 
 /* =========================================================
    MAIN APP
-========================================================= */
+   ========================================================= */
 
 export default function Duka() {
   const [cart, setCart] = useState([]);
@@ -398,37 +492,34 @@ export default function Duka() {
   const [gender, setGender] = useState("All");
   const [category, setCategory] = useState("All");
 
-  /* =======================================================
-     GENDER FILTERS
-  ======================================================= */
-
   const genders = ["All", "Men", "Women", "Kids"];
 
   /* =======================================================
-     CATEGORY FILTERS
-  ======================================================= */
+     CATEGORY FILTER
+     ======================================================= */
 
   const categories = useMemo(() => {
-    const products =
+    const filteredProducts =
       gender === "All"
         ? PRODUCTS
         : PRODUCTS.filter(
             (product) => product.gender === gender
           );
 
-    return [
-      "All",
+    const uniqueCategories = [
       ...new Set(
-        products.map(
+        filteredProducts.map(
           (product) => product.category
         )
       ),
     ];
+
+    return ["All", ...uniqueCategories];
   }, [gender]);
 
   /* =======================================================
      VISIBLE PRODUCTS
-  ======================================================= */
+     ======================================================= */
 
   const visibleProducts = useMemo(() => {
     return PRODUCTS.filter((product) => {
@@ -446,7 +537,7 @@ export default function Duka() {
 
   /* =======================================================
      CHANGE GENDER
-  ======================================================= */
+     ======================================================= */
 
   function changeGender(newGender) {
     setGender(newGender);
@@ -455,15 +546,15 @@ export default function Duka() {
 
   /* =======================================================
      ADD TO CART
-  ======================================================= */
+     ======================================================= */
 
   function addToCart(product) {
     setCart((currentCart) => {
-      const found = currentCart.find(
+      const existing = currentCart.find(
         (item) => item.id === product.id
       );
 
-      if (found) {
+      if (existing) {
         return currentCart.map((item) =>
           item.id === product.id
             ? {
@@ -487,8 +578,8 @@ export default function Duka() {
   }
 
   /* =======================================================
-     CHANGE QUANTITY
-  ======================================================= */
+     QUANTITY
+     ======================================================= */
 
   function changeQty(id, amount) {
     setCart((currentCart) =>
@@ -507,7 +598,7 @@ export default function Duka() {
 
   /* =======================================================
      CART TOTAL
-  ======================================================= */
+     ======================================================= */
 
   const total = cart.reduce(
     (sum, item) =>
@@ -522,8 +613,8 @@ export default function Duka() {
   );
 
   /* =======================================================
-     WHATSAPP CHECKOUT
-  ======================================================= */
+     WHATSAPP
+     ======================================================= */
 
   function checkoutOnWhatsapp() {
     if (cart.length === 0) return;
@@ -551,7 +642,7 @@ export default function Duka() {
 
   /* =======================================================
      PAGE
-  ======================================================= */
+     ======================================================= */
 
   return (
     <div
@@ -573,9 +664,7 @@ export default function Duka() {
         rel="stylesheet"
       />
 
-      {/* ===================================================
-          HEADER
-      =================================================== */}
+      {/* HEADER */}
 
       <header className="sticky top-0 z-30 bg-[#1C2541] text-[#F3E9DA]">
 
@@ -624,9 +713,7 @@ export default function Duka() {
 
       </header>
 
-      {/* ===================================================
-          HERO
-      =================================================== */}
+      {/* HERO */}
 
       <section className="max-w-5xl mx-auto px-5 pt-14 pb-10">
 
@@ -670,9 +757,7 @@ export default function Duka() {
 
       </section>
 
-      {/* ===================================================
-          MEN / WOMEN / KIDS
-      =================================================== */}
+      {/* GENDER */}
 
       <div className="max-w-5xl mx-auto px-5 mb-5">
 
@@ -699,9 +784,7 @@ export default function Duka() {
 
       </div>
 
-      {/* ===================================================
-          CLOTHING CATEGORIES
-      =================================================== */}
+      {/* CATEGORIES */}
 
       <div className="max-w-5xl mx-auto px-5 mb-7">
 
@@ -728,9 +811,26 @@ export default function Duka() {
 
       </div>
 
-      {/* ===================================================
-          PRODUCTS
-      =================================================== */}
+      {/* PRODUCT COUNT */}
+
+      <div className="max-w-5xl mx-auto px-5 mb-4">
+
+        <p
+          className="text-xs uppercase tracking-wide text-[#1C2541]/50"
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+          }}
+        >
+          {visibleProducts.length}{" "}
+          {visibleProducts.length === 1
+            ? "item"
+            : "items"}{" "}
+          available
+        </p>
+
+      </div>
+
+      {/* PRODUCTS */}
 
       <main className="max-w-5xl mx-auto px-5 pb-24">
 
@@ -772,9 +872,7 @@ export default function Duka() {
 
       </main>
 
-      {/* ===================================================
-          FOOTER
-      =================================================== */}
+      {/* FOOTER */}
 
       <footer className="bg-[#1C2541] text-[#F3E9DA]">
 
@@ -814,9 +912,7 @@ export default function Duka() {
 
       </footer>
 
-      {/* ===================================================
-          CART
-      =================================================== */}
+      {/* CART */}
 
       {cartOpen && (
         <div className="fixed inset-0 z-40 flex justify-end">
@@ -956,6 +1052,7 @@ export default function Duka() {
             </div>
 
           </div>
+
         </div>
       )}
 
