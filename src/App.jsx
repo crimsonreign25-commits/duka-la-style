@@ -36,93 +36,96 @@ const WHATSAPP_NUMBER = "254710574821";
 
 /* =========================================================
    IMAGE LIBRARY
-   Each group contains different clothing images.
+   Each group contains different clothing images, sourced from
+   LoremFlickr (a free, keyword-based photo service). Each product
+   gets 2 images — if the first fails to load, SafeImage below
+   automatically falls back to the second.
 ========================================================= */
 
 const IMG = {
   menTrousers: [
-    "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/trousers,men?lock=1",
+    "https://loremflickr.com/400/500/trousers?lock=2",
+    "https://loremflickr.com/400/500/menswear?lock=3",
   ],
 
   menShirts: [
-    "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1626497764746-6dc36546b388?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/shirt,men?lock=1",
+    "https://loremflickr.com/400/500/shirt?lock=2",
+    "https://loremflickr.com/400/500/menswear?lock=4",
   ],
 
   menTshirts: [
-    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1583743814966-8936f37f4e6?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/tshirt?lock=1",
+    "https://loremflickr.com/400/500/tshirt?lock=2",
+    "https://loremflickr.com/400/500/tshirt?lock=3",
   ],
 
   menJackets: [
-    "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/jacket,men?lock=1",
+    "https://loremflickr.com/400/500/jacket?lock=2",
   ],
 
   menJeans: [
-    "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1475178626620-a4d074967452?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/jeans?lock=1",
+    "https://loremflickr.com/400/500/jeans?lock=2",
   ],
 
   menShorts: [
-    "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/shorts?lock=1",
+    "https://loremflickr.com/400/500/shorts?lock=2",
   ],
 
   womenDresses: [
-    "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1572804013427-4d7ca7268217?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/dress?lock=1",
+    "https://loremflickr.com/400/500/dress?lock=2",
+    "https://loremflickr.com/400/500/dress?lock=3",
+    "https://loremflickr.com/400/500/dress?lock=4",
   ],
 
   womenSkirts: [
-    "https://images.unsplash.com/photo-1583496661160-fb5886a13d27?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1582142306909-195724d33ffc?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/skirt?lock=1",
+    "https://loremflickr.com/400/500/skirt?lock=2",
   ],
 
   womenTrousers: [
-    "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/trousers,women?lock=1",
+    "https://loremflickr.com/400/500/trousers?lock=5",
   ],
 
   womenTops: [
-    "https://images.unsplash.com/photo-1564257577054-0f3f4a1c0c65?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1566206091558-7f218b696731?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/blouse?lock=1",
+    "https://loremflickr.com/400/500/blouse?lock=2",
   ],
 
   womenJackets: [
-    "https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/jacket,women?lock=1",
+    "https://loremflickr.com/400/500/jacket?lock=6",
   ],
 
   womenJeans: [
-    "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1582418702059-97ebafb35d09?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/jeans,women?lock=1",
+    "https://loremflickr.com/400/500/jeans?lock=7",
   ],
 
   kidsTrousers: [
-    "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/kids,clothing?lock=1",
+    "https://loremflickr.com/400/500/children,clothing?lock=2",
   ],
 
   kidsTshirts: [
-    "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/kids,tshirt?lock=1",
+    "https://loremflickr.com/400/500/children?lock=3",
   ],
 
   kidsShorts: [
-    "https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/kids,shorts?lock=1",
+    "https://loremflickr.com/400/500/children?lock=4",
   ],
 
   girls: [
-    "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1525258946800-98cfd641d0de?auto=format&fit=crop&w=900&q=85",
+    "https://loremflickr.com/400/500/girl,dress?lock=1",
+    "https://loremflickr.com/400/500/children?lock=5",
   ],
 };
 
