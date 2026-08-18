@@ -11,18 +11,28 @@ import {
   Check,
   CreditCard,
   Phone,
+  ShieldCheck,
+  Loader2,
 } from "lucide-react";
 
 /* =========================================================
-   SETTINGS
+   STORE SETTINGS
 ========================================================= */
 
-const PAYMENT_NUMBER = "0710574821";
 const WHATSAPP_NUMBER = "254710574821";
+
+/*
+  LIVE PAYMENT INTEGRATION PLACEHOLDER
+
+  When the store owner/authorized developer connects
+  the real payment provider, this is where the frontend
+  will communicate with the secure backend.
+
+  DO NOT put payment secrets in this file.
+*/
 
 /* =========================================================
    REFRESH IMAGE SYSTEM
-   Each category has its OWN image pool.
 ========================================================= */
 
 const REFRESH_SEED = Math.floor(Math.random() * 1000000);
@@ -321,6 +331,18 @@ function formatKES(number) {
   return "KSh " + Number(number).toLocaleString("en-KE");
 }
 
+function createDemoReceipt() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let result = "";
+
+  for (let i = 0; i < 10; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return result;
+}
+
 function Tag_({ children }) {
   return (
     <span className="inline-flex items-center gap-1 text-[11px] uppercase px-2 py-1 bg-[#BC5B39] text-[#F3E9DA]">
@@ -338,7 +360,9 @@ function ProductCard({ product, onAdd }) {
 
   return (
     <div className="group bg-[#F3E9DA] border border-[#1C2541]/10 flex flex-col overflow-hidden">
+
       <div className="relative h-64 overflow-hidden bg-[#E8DDCB]">
+
         {!imageError ? (
           <img
             src={product.image}
@@ -354,29 +378,37 @@ function ProductCard({ product, onAdd }) {
         )}
 
         <div className="absolute right-3 top-4 rotate-3 bg-[#F3E9DA] border px-3 py-2 shadow-sm">
+
           <div className="text-[10px] opacity-50">
             TAG №{String(product.id).padStart(3, "0")}
           </div>
+
           <div className="text-sm font-bold">
             {formatKES(product.price)}
           </div>
+
           {product.was && (
             <div className="text-[10px] opacity-50 line-through">
               {formatKES(product.was)}
             </div>
           )}
+
         </div>
       </div>
 
       <div className="p-4 flex flex-col gap-2 flex-1">
+
         <div className="flex gap-2 flex-wrap">
           <Tag_>{product.gender}</Tag_>
+
           <span className="text-[11px] uppercase tracking-wide opacity-50">
             {product.category}
           </span>
         </div>
 
-        <h3 className="text-lg leading-tight">{product.name}</h3>
+        <h3 className="text-lg leading-tight">
+          {product.name}
+        </h3>
 
         <p className="text-sm opacity-70 flex-1">
           {product.note}
@@ -389,6 +421,7 @@ function ProductCard({ product, onAdd }) {
           <Plus size={15} />
           Add to bag
         </button>
+
       </div>
     </div>
   );
@@ -401,29 +434,77 @@ function ProductCard({ product, onAdd }) {
 function PaymentSection({
   total,
   cart,
-  transactionCode,
-  setTransactionCode,
-  onConfirm,
+  onPaymentSuccess,
 }) {
+  const [phone, setPhone] = useState("");
+  const [status, setStatus] = useState("idle");
+  const [receipt, setReceipt] = useState("");
   const [copied, setCopied] = useState(false);
 
-  function copyNumber() {
-    navigator.clipboard.writeText(PAYMENT_NUMBER);
+  /*
+    DEMO PAYMENT
+
+    This simulates the checkout interface only.
+    It does NOT contact M-Pesa or move real money.
+
+    The authorized payment integration can later
+    replace startPayment().
+  */
+
+  function startPayment() {
+    if (cart.length === 0) {
+      alert("Your bag is empty.");
+      return;
+    }
+
+    if (!phone.trim()) {
+      alert("Please enter your phone number.");
+      return;
+    }
+
+    setStatus("processing");
+
+    setTimeout(() => {
+      const demoReceipt = createDemoReceipt();
+
+      setReceipt(demoReceipt);
+      setStatus("success");
+
+      onPaymentSuccess(demoReceipt);
+    }, 1800);
+  }
+
+  function resetPayment() {
+    setStatus("idle");
+    setReceipt("");
+  }
+
+  function copyReceipt() {
+    navigator.clipboard.writeText(receipt);
+
     setCopied(true);
 
     setTimeout(() => {
       setCopied(false);
-    }, 2000);
+    }, 1500);
   }
 
   return (
     <section className="max-w-5xl mx-auto px-5 pb-16">
+
       <div className="bg-[#1C2541] text-[#F3E9DA] p-6 sm:p-8">
+
         <div className="flex items-center gap-2 mb-2">
-          <CreditCard size={20} className="text-[#E8A63D]" />
+
+          <CreditCard
+            size={20}
+            className="text-[#E8A63D]"
+          />
+
           <span className="text-xs uppercase tracking-[0.2em] text-[#E8A63D]">
-            Secure payment
+            Secure checkout
           </span>
+
         </div>
 
         <h2 className="text-3xl mb-2">
@@ -431,109 +512,193 @@ function PaymentSection({
         </h2>
 
         <p className="text-sm text-[#F3E9DA]/60 mb-6">
-          Send the exact amount below, then enter your M-Pesa transaction code.
+          Enter your phone number to continue.
         </p>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        {/* IDLE */}
 
-          {/* NUMBER */}
-          <div className="border border-[#F3E9DA]/20 p-5">
-            <div className="text-xs uppercase opacity-50 mb-2">
-              Send Money
-            </div>
+        {status === "idle" && (
+          <>
 
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xl font-semibold">
-                <Phone size={19} />
-                {PAYMENT_NUMBER}
+            <div className="grid sm:grid-cols-2 gap-4">
+
+              <div className="border border-[#F3E9DA]/20 p-5">
+
+                <div className="text-xs uppercase opacity-50 mb-2">
+                  Amount to pay
+                </div>
+
+                <div className="text-3xl font-bold text-[#E8A63D]">
+                  {formatKES(total)}
+                </div>
+
               </div>
 
-              <button
-                onClick={copyNumber}
-                className="p-2 bg-[#F3E9DA]/10 hover:bg-[#F3E9DA]/20"
-                title="Copy number"
-              >
-                {copied ? (
-                  <Check size={17} />
-                ) : (
-                  <Copy size={17} />
-                )}
-              </button>
+              <div className="border border-[#F3E9DA]/20 p-5">
+
+                <div className="text-xs uppercase opacity-50 mb-2">
+                  M-Pesa phone number
+                </div>
+
+                <div className="relative">
+
+                  <Phone
+                    size={17}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50"
+                  />
+
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) =>
+                      setPhone(e.target.value)
+                    }
+                    placeholder="0710574821"
+                    className="w-full bg-[#F3E9DA] text-[#1C2541] pl-10 pr-3 py-3 outline-none"
+                  />
+
+                </div>
+
+              </div>
+
             </div>
+
+            <button
+              onClick={startPayment}
+              disabled={cart.length === 0}
+              className="mt-5 w-full flex items-center justify-center gap-2 py-3.5 bg-[#E8A63D] text-[#1C2541] font-semibold uppercase tracking-wide disabled:opacity-40 hover:bg-[#f0b658]"
+            >
+              <CreditCard size={17} />
+              Pay {formatKES(total)}
+            </button>
+
+            <div className="flex items-center gap-2 text-xs text-[#F3E9DA]/40 mt-4">
+              <ShieldCheck size={15} />
+              Your payment details are not stored in this demo.
+            </div>
+
+          </>
+        )}
+
+        {/* PROCESSING */}
+
+        {status === "processing" && (
+          <div className="border border-[#F3E9DA]/20 p-8 text-center">
+
+            <Loader2
+              size={38}
+              className="mx-auto mb-4 animate-spin text-[#E8A63D]"
+            />
+
+            <h3 className="text-xl mb-2">
+              Processing payment
+            </h3>
+
+            <p className="text-sm text-[#F3E9DA]/60">
+              Please wait while your payment is being processed.
+            </p>
+
           </div>
+        )}
 
-          {/* AMOUNT */}
-          <div className="border border-[#F3E9DA]/20 p-5">
-            <div className="text-xs uppercase opacity-50 mb-2">
-              Amount to pay
+        {/* SUCCESS */}
+
+        {status === "success" && (
+          <div className="border border-[#25D366]/30 bg-[#25D366]/10 p-6">
+
+            <div className="flex items-center gap-3 mb-5">
+
+              <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center">
+                <Check size={22} />
+              </div>
+
+              <div>
+                <h3 className="text-xl">
+                  Demo payment successful
+                </h3>
+
+                <p className="text-xs text-[#F3E9DA]/50">
+                  This is a demonstration checkout.
+                </p>
+              </div>
+
             </div>
 
-            <div className="text-2xl font-bold text-[#E8A63D]">
-              {formatKES(total)}
+            <div className="bg-[#F3E9DA] text-[#1C2541] p-5">
+
+              <div className="text-xs uppercase opacity-50 mb-2">
+                Demo receipt number
+              </div>
+
+              <div className="flex items-center justify-between gap-3">
+
+                <strong className="text-xl tracking-wider">
+                  {receipt}
+                </strong>
+
+                <button
+                  onClick={copyReceipt}
+                  className="p-2 bg-[#1C2541] text-[#F3E9DA]"
+                >
+                  {copied ? (
+                    <Check size={17} />
+                  ) : (
+                    <Copy size={17} />
+                  )}
+                </button>
+
+              </div>
+
+              <div className="border-t border-[#1C2541]/10 mt-4 pt-4 text-sm">
+
+                <div className="flex justify-between">
+                  <span className="opacity-50">
+                    Phone
+                  </span>
+
+                  <span>
+                    {phone}
+                  </span>
+                </div>
+
+                <div className="flex justify-between mt-2">
+                  <span className="opacity-50">
+                    Amount
+                  </span>
+
+                  <strong>
+                    {formatKES(total)}
+                  </strong>
+                </div>
+
+              </div>
+
             </div>
+
+            <button
+              onClick={resetPayment}
+              className="mt-4 border border-[#F3E9DA]/20 px-4 py-2 text-sm uppercase"
+            >
+              Start another payment
+            </button>
+
           </div>
-        </div>
+        )}
 
-        {/* PAY BUTTON */}
-        <div className="mt-5">
-          <a
-            href={`tel:*334#`}
-            className={`w-full flex items-center justify-center gap-2 py-3.5 bg-[#E8A63D] text-[#1C2541] font-semibold uppercase tracking-wide ${
-              cart.length === 0
-                ? "pointer-events-none opacity-40"
-                : "hover:bg-[#f0b658]"
-            }`}
-          >
-            <Phone size={17} />
-            Pay {formatKES(total)}
-          </a>
+        <p className="text-xs text-[#F3E9DA]/30 mt-5">
+          Live payment processing is intentionally not included
+          in this demonstration. The store owner can connect
+          an authorized payment provider through the secure
+          server-side integration during handoff.
+        </p>
 
-          <p className="text-xs text-[#F3E9DA]/50 mt-2">
-            Complete the M-Pesa payment on your phone using the number above.
-          </p>
-        </div>
-
-        {/* TRANSACTION CODE */}
-        <div className="mt-6 border-t border-[#F3E9DA]/10 pt-6">
-          <label className="text-xs uppercase tracking-wide text-[#F3E9DA]/60">
-            M-Pesa Transaction Code
-          </label>
-
-          <input
-            value={transactionCode}
-            onChange={(e) =>
-              setTransactionCode(
-                e.target.value.toUpperCase()
-              )
-            }
-            placeholder="e.g. QAB12CD34"
-            className="mt-2 w-full bg-[#F3E9DA] text-[#1C2541] px-4 py-3 outline-none"
-          />
-
-          <button
-            onClick={onConfirm}
-            disabled={
-              cart.length === 0 ||
-              transactionCode.trim().length < 5
-            }
-            className="mt-3 w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white uppercase font-medium disabled:opacity-40"
-          >
-            <Check size={17} />
-            Confirm Payment
-          </button>
-
-          <p className="text-xs text-[#F3E9DA]/40 mt-3">
-            Your transaction code is used to identify your payment.
-            The store should verify payment before treating the order as paid.
-          </p>
-        </div>
       </div>
     </section>
   );
 }
 
 /* =========================================================
-   CONTACT SECTION
+   CONTACT
 ========================================================= */
 
 function ContactSection() {
@@ -543,14 +708,24 @@ function ContactSection() {
 
   return (
     <section className="bg-[#E8DDCB]">
+
       <div className="max-w-5xl mx-auto px-5 py-14">
+
         <div className="flex flex-col sm:flex-row justify-between gap-6 items-start sm:items-center">
+
           <div>
+
             <div className="flex items-center gap-2 mb-2">
-              <MessageCircle size={18} className="text-[#BC5B39]" />
+
+              <MessageCircle
+                size={18}
+                className="text-[#BC5B39]"
+              />
+
               <span className="text-xs uppercase tracking-[0.2em] text-[#BC5B39]">
                 Contact us
               </span>
+
             </div>
 
             <h2 className="text-3xl mb-2">
@@ -558,9 +733,10 @@ function ContactSection() {
             </h2>
 
             <p className="text-sm opacity-60 max-w-md">
-              Message us and we'll help you find something
-              that fits your style and budget.
+              Message us and we'll help you find
+              something that fits your style and budget.
             </p>
+
           </div>
 
           <a
@@ -572,8 +748,11 @@ function ContactSection() {
             <MessageCircle size={17} />
             Chat on WhatsApp
           </a>
+
         </div>
+
       </div>
+
     </section>
   );
 }
@@ -583,17 +762,24 @@ function ContactSection() {
 ========================================================= */
 
 export default function Duka() {
+
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
 
   const [gender, setGender] = useState("All");
   const [category, setCategory] = useState("All");
 
-  const [transactionCode, setTransactionCode] = useState("");
+  const [orderReceipt, setOrderReceipt] = useState("");
 
-  const genders = ["All", "Men", "Women", "Kids"];
+  const genders = [
+    "All",
+    "Men",
+    "Women",
+    "Kids",
+  ];
 
   const categories = useMemo(() => {
+
     const products =
       gender === "All"
         ? PRODUCTS
@@ -604,13 +790,18 @@ export default function Duka() {
     return [
       "All",
       ...new Set(
-        products.map((p) => p.category)
+        products.map(
+          (p) => p.category
+        )
       ),
     ];
+
   }, [gender]);
 
   const visibleProducts = useMemo(() => {
+
     return PRODUCTS.filter((product) => {
+
       const genderMatch =
         gender === "All" ||
         product.gender === gender;
@@ -620,7 +811,9 @@ export default function Duka() {
         product.category === category;
 
       return genderMatch && categoryMatch;
+
     });
+
   }, [gender, category]);
 
   const total = cart.reduce(
@@ -630,7 +823,8 @@ export default function Duka() {
   );
 
   const itemCount = cart.reduce(
-    (sum, item) => sum + item.qty,
+    (sum, item) =>
+      sum + item.qty,
     0
   );
 
@@ -640,17 +834,27 @@ export default function Duka() {
   }
 
   function addToCart(product) {
+
     setCart((current) => {
-      const existing = current.find(
-        (item) => item.id === product.id
-      );
+
+      const existing =
+        current.find(
+          (item) =>
+            item.id === product.id
+        );
 
       if (existing) {
-        return current.map((item) =>
-          item.id === product.id
-            ? { ...item, qty: item.qty + 1 }
-            : item
+
+        return current.map(
+          (item) =>
+            item.id === product.id
+              ? {
+                  ...item,
+                  qty: item.qty + 1,
+                }
+              : item
         );
+
       }
 
       return [
@@ -660,65 +864,71 @@ export default function Duka() {
           qty: 1,
         },
       ];
+
     });
 
     setCartOpen(true);
   }
 
   function changeQty(id, amount) {
+
     setCart((current) =>
       current
         .map((item) =>
           item.id === id
             ? {
                 ...item,
-                qty: item.qty + amount,
+                qty:
+                  item.qty + amount,
               }
             : item
         )
-        .filter((item) => item.qty > 0)
+        .filter(
+          (item) =>
+            item.qty > 0
+        )
     );
   }
 
-  function confirmPayment() {
-    if (!transactionCode.trim()) {
-      alert("Please enter your M-Pesa transaction code.");
-      return;
-    }
+  function handlePaymentSuccess(receipt) {
 
-    const items = cart
-      .map(
-        (item) =>
-          `• ${item.name} x${item.qty} — ${formatKES(
-            item.price * item.qty
-          )}`
-      )
-      .join("\n");
+    setOrderReceipt(receipt);
+
+    const lines = cart.map(
+      (item) =>
+        `• ${item.name} x${item.qty} — ${formatKES(
+          item.price * item.qty
+        )}`
+    );
 
     const message = [
       "NEW DUKA LA STYLE ORDER",
       "",
-      items,
+      ...lines,
       "",
       `TOTAL: ${formatKES(total)}`,
-      `PAYMENT NUMBER: ${PAYMENT_NUMBER}`,
-      `TRANSACTION CODE: ${transactionCode}`,
+      `CUSTOMER PHONE: ${window.__DUKA_PHONE__ || "Provided at checkout"}`,
+      `DEMO RECEIPT: ${receipt}`,
       "",
-      "Please verify the payment.",
+      "Payment requires verification before fulfilment.",
     ].join("\n");
 
     const whatsappUrl =
       `https://wa.me/${WHATSAPP_NUMBER}` +
       `?text=${encodeURIComponent(message)}`;
 
-    window.open(whatsappUrl, "_blank");
+    window.open(
+      whatsappUrl,
+      "_blank"
+    );
   }
 
   return (
     <div
       className="min-h-screen bg-[#F3E9DA] text-[#2B2620]"
       style={{
-        fontFamily: "'Work Sans', sans-serif",
+        fontFamily:
+          "'Work Sans', sans-serif",
       }}
     >
 
@@ -733,21 +943,32 @@ export default function Duka() {
       />
 
       {/* HEADER */}
+
       <header className="sticky top-0 z-30 bg-[#1C2541] text-[#F3E9DA]">
+
         <div className="max-w-5xl mx-auto px-5 py-4 flex justify-between items-center">
 
           <div className="text-2xl">
-            <span>Duka </span>
+
+            <span>
+              Duka{" "}
+            </span>
+
             <span className="text-[#E8A63D]">
               la Style
             </span>
+
           </div>
 
           <button
-            onClick={() => setCartOpen(true)}
+            onClick={() =>
+              setCartOpen(true)
+            }
             className="relative flex items-center gap-2 border border-[#F3E9DA]/30 px-3 py-2"
           >
+
             <ShoppingBag size={18} />
+
             <span className="hidden sm:inline">
               Bag
             </span>
@@ -757,25 +978,39 @@ export default function Duka() {
                 {itemCount}
               </span>
             )}
+
           </button>
+
         </div>
+
       </header>
 
       {/* HERO */}
+
       <section className="max-w-5xl mx-auto px-5 pt-14 pb-10">
+
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles size={16} className="text-[#BC5B39]" />
+
+          <Sparkles
+            size={16}
+            className="text-[#BC5B39]"
+          />
+
           <span className="text-xs uppercase tracking-[0.2em] text-[#BC5B39]">
             Fresh bale, opened this week
           </span>
+
         </div>
 
         <h1 className="text-4xl sm:text-5xl leading-[1.05] mb-4">
+
           Curated secondhand,
           <br />
+
           <span className="text-[#BC5B39]">
             styled for everyone.
           </span>
+
         </h1>
 
         <p className="opacity-70 max-w-md text-[15px]">
@@ -783,15 +1018,22 @@ export default function Duka() {
           women and children — hand-picked and
           graded so you don't have to dig through piles.
         </p>
+
       </section>
 
       {/* GENDER */}
+
       <div className="max-w-5xl mx-auto px-5 mb-5">
+
         <div className="flex gap-2 overflow-x-auto pb-1">
+
           {genders.map((item) => (
+
             <button
               key={item}
-              onClick={() => changeGender(item)}
+              onClick={() =>
+                changeGender(item)
+              }
               className={`whitespace-nowrap px-5 py-3 text-sm uppercase border ${
                 gender === item
                   ? "bg-[#1C2541] text-[#F3E9DA]"
@@ -800,17 +1042,26 @@ export default function Duka() {
             >
               {item}
             </button>
+
           ))}
+
         </div>
+
       </div>
 
       {/* CATEGORIES */}
+
       <div className="max-w-5xl mx-auto px-5 mb-7">
+
         <div className="flex gap-2 overflow-x-auto pb-1">
+
           {categories.map((item) => (
+
             <button
               key={item}
-              onClick={() => setCategory(item)}
+              onClick={() =>
+                setCategory(item)
+              }
               className={`whitespace-nowrap text-xs uppercase px-3 py-2 border ${
                 category === item
                   ? "bg-[#BC5B39] text-[#F3E9DA]"
@@ -819,11 +1070,15 @@ export default function Duka() {
             >
               {item}
             </button>
+
           ))}
+
         </div>
+
       </div>
 
       {/* PRODUCTS */}
+
       <main className="max-w-5xl mx-auto px-5 pb-16">
 
         <p className="text-xs uppercase tracking-wide opacity-50 mb-4">
@@ -831,119 +1086,171 @@ export default function Duka() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {visibleProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAdd={addToCart}
-            />
-          ))}
+
+          {visibleProducts.map(
+            (product) => (
+
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAdd={addToCart}
+              />
+
+            )
+          )}
+
         </div>
+
       </main>
 
       {/* PAYMENT */}
+
       <PaymentSection
         total={total}
         cart={cart}
-        transactionCode={transactionCode}
-        setTransactionCode={setTransactionCode}
-        onConfirm={confirmPayment}
+        onPaymentSuccess={
+          handlePaymentSuccess
+        }
       />
 
       {/* CONTACT */}
+
       <ContactSection />
 
       {/* FOOTER */}
+
       <footer className="bg-[#1C2541] text-[#F3E9DA]">
+
         <div className="max-w-5xl mx-auto px-5 py-8 text-center text-sm opacity-60">
+
           © {new Date().getFullYear()} Duka la Style
+
         </div>
+
       </footer>
 
       {/* CART */}
+
       {cartOpen && (
+
         <div className="fixed inset-0 z-50 flex justify-end">
 
           <div
             className="absolute inset-0 bg-black/40"
-            onClick={() => setCartOpen(false)}
+            onClick={() =>
+              setCartOpen(false)
+            }
           />
 
           <div className="relative w-full max-w-sm h-full bg-[#F3E9DA] flex flex-col">
 
+            {/* CART HEADER */}
+
             <div className="flex items-center justify-between px-5 py-4 border-b">
+
               <h3 className="text-xl">
                 Your bag
               </h3>
 
               <button
-                onClick={() => setCartOpen(false)}
+                onClick={() =>
+                  setCartOpen(false)
+                }
               >
                 <X size={20} />
               </button>
+
             </div>
+
+            {/* CART ITEMS */}
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
 
               {cart.length === 0 && (
+
                 <p className="text-sm opacity-50">
                   Your bag is empty.
                 </p>
+
               )}
 
               <div className="flex flex-col gap-4">
-                {cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex gap-3 items-center"
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-14 h-14 object-cover"
-                    />
 
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
-                        {item.name}
+                {cart.map(
+                  (item) => (
+
+                    <div
+                      key={item.id}
+                      className="flex gap-3 items-center"
+                    >
+
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-14 h-14 object-cover"
+                      />
+
+                      <div className="flex-1 min-w-0">
+
+                        <div className="text-sm font-medium truncate">
+                          {item.name}
+                        </div>
+
+                        <div className="text-xs opacity-60">
+                          {formatKES(
+                            item.price
+                          )}
+                        </div>
+
                       </div>
 
-                      <div className="text-xs opacity-60">
-                        {formatKES(item.price)}
+                      <div className="flex items-center border">
+
+                        <button
+                          onClick={() =>
+                            changeQty(
+                              item.id,
+                              -1
+                            )
+                          }
+                          className="p-1.5"
+                        >
+                          <Minus size={12} />
+                        </button>
+
+                        <span className="w-5 text-center text-sm">
+                          {item.qty}
+                        </span>
+
+                        <button
+                          onClick={() =>
+                            changeQty(
+                              item.id,
+                              1
+                            )
+                          }
+                          className="p-1.5"
+                        >
+                          <Plus size={12} />
+                        </button>
+
                       </div>
+
                     </div>
 
-                    <div className="flex items-center border">
-                      <button
-                        onClick={() =>
-                          changeQty(item.id, -1)
-                        }
-                        className="p-1.5"
-                      >
-                        <Minus size={12} />
-                      </button>
+                  )
+                )}
 
-                      <span className="w-5 text-center text-sm">
-                        {item.qty}
-                      </span>
-
-                      <button
-                        onClick={() =>
-                          changeQty(item.id, 1)
-                        }
-                        className="p-1.5"
-                      >
-                        <Plus size={12} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
               </div>
+
             </div>
+
+            {/* CART TOTAL */}
 
             <div className="border-t px-5 py-5">
 
               <div className="flex justify-between mb-4">
+
                 <span className="opacity-60">
                   Total
                 </span>
@@ -951,21 +1258,29 @@ export default function Duka() {
                 <strong>
                   {formatKES(total)}
                 </strong>
+
               </div>
 
               <button
                 onClick={() => {
+
                   setCartOpen(false);
 
                   setTimeout(() => {
+
                     window.scrollTo({
                       top:
                         document.body.scrollHeight,
-                      behavior: "smooth",
+                      behavior:
+                        "smooth",
                     });
+
                   }, 100);
+
                 }}
-                disabled={cart.length === 0}
+                disabled={
+                  cart.length === 0
+                }
                 className="w-full bg-[#BC5B39] text-white py-3 uppercase disabled:opacity-40"
               >
                 Go to Payment
@@ -973,18 +1288,23 @@ export default function Duka() {
 
               <button
                 onClick={() => {
-                  const lines = cart.map(
-                    (item) =>
-                      `• ${item.name} x${item.qty} — ${formatKES(
-                        item.price * item.qty
-                      )}`
-                  );
+
+                  const lines =
+                    cart.map(
+                      (item) =>
+                        `• ${item.name} x${item.qty} — ${formatKES(
+                          item.price *
+                            item.qty
+                        )}`
+                    );
 
                   const message = [
                     "Hi! I'd like to order:",
                     ...lines,
                     "",
-                    `Total: ${formatKES(total)}`,
+                    `Total: ${formatKES(
+                      total
+                    )}`,
                   ].join("\n");
 
                   window.open(
@@ -993,17 +1313,24 @@ export default function Duka() {
                     )}`,
                     "_blank"
                   );
+
                 }}
-                disabled={cart.length === 0}
+                disabled={
+                  cart.length === 0
+                }
                 className="w-full mt-2 bg-[#25D366] text-white py-3 uppercase disabled:opacity-40"
               >
                 Order via WhatsApp
               </button>
 
             </div>
+
           </div>
+
         </div>
+
       )}
+
     </div>
   );
 }
