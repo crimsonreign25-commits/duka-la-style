@@ -1,66 +1,56 @@
-    category: "Outerwear",
-    price: 1600,
-    was: 2200,
-    color: "#E8A63D",
-    note: "Sharp shoulders — great for interviews.",
-  },import React, { useState, useMemo } from "react";
+hereimport React, { useState, useMemo } from "react";
 import { ShoppingBag, X, Plus, Minus, MessageCircle, Sparkles, Tag } from "lucide-react";
 
 const PRODUCTS = [
   {
     id: 1,
-    name: "Emerald Wrap Dress",
+    name: "Floral Wrap Dress",
     grade: "Grade 1 · Cream",
     category: "Dresses",
-    price: 1200,
-    was: 1800,
-    color: "#2F5233",
-    note: "First pick of the bale — barely worn.",
+    price: 800,
+    was: 1200,
+    image: "https://picsum.photos/seed/dress1/400/500",
+    note: "First pick of the bale — soft cotton blend.",
   },
   {
     id: 2,
-    name: "Rust Midi Skirt",
+    name: "High-Waist Skinny Jeans",
     grade: "Grade 1",
-    category: "Skirts",
+    category: "Denim",
     price: 700,
-    color: "#BC5B39",
-    note: "Pairs well with a plain white top.",
+    image: "https://picsum.photos/seed/jeans1/400/500",
+    note: "Stretch fit, true to size.",
   },
   {
     id: 3,
-    name: "Denim Straight Jeans",
-    grade: "Grade 2",
-    category: "Denim",
-    price: 900,
-    color: "#3A4A63",
-    note: "True to size, no fading.",
+    name: "Denim Jacket",
+    grade: "Grade 1 · Cream",
+    category: "Outerwear",
+    price: 1500,
+    image: "https://picsum.photos/seed/jacket1/400/500",
+    note: "Classic fit, layers well over anything.",
   },
   {
     id: 4,
-    name: "Mustard Blazer",
-    grade: "Grade 1 · Cream",
-
-  {
-    id: 5,
-    name: "Ivory Slip Dress",
+    name: "Ankara Print Skirt",
     grade: "Grade 1",
-    category: "Dresses",
-    price: 1000,
-    color: "#EDE3D0",
-    note: "Dress up or down with layering.",
+    category: "Skirts",
+    price: 600,
+    image: "https://picsum.photos/seed/skirt1/400/500",
+    note: "Bold print, great for events.",
   },
   {
-    id: 6,
-    name: "Charcoal Wide-Leg Trousers",
+    id: 5,
+    name: "Tailored Trousers",
     grade: "Grade 2",
     category: "Trousers",
-    price: 750,
-    color: "#2B2620",
-    note: "Office-ready, breathable fabric.",
+    price: 500,
+    image: "https://picsum.photos/seed/trousers1/400/500",
+    note: "Office-ready, comfortable fit.",
   },
 ];
 
-const WHATSAPP_NUMBER = "254710574821"; // placeholder — swap for the real business number
+const WHATSAPP_NUMBER = "254710574821";
 
 function formatKES(n) {
   return "KSh " + n.toLocaleString("en-KE");
@@ -85,10 +75,12 @@ function Tag_({ children, tone = "clay" }) {
 function ProductCard({ product, onAdd }) {
   return (
     <div className="group relative bg-[#F3E9DA] border border-[#1C2541]/10 flex flex-col">
-      <div
-        className="relative h-56 flex items-end justify-center overflow-hidden"
-        style={{ backgroundColor: product.color }}
-      >
+      <div className="relative h-56 flex items-end justify-center overflow-hidden">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
         <div
           className="absolute -right-3 top-4 rotate-6 bg-[#F3E9DA] border border-[#1C2541]/20 px-3 py-2 shadow-sm"
           style={{ fontFamily: "'JetBrains Mono', monospace" }}
@@ -275,7 +267,7 @@ export default function Duka() {
               )}
               {cart.map((i) => (
                 <div key={i.id} className="flex items-center gap-3">
-                  <div className="w-14 h-14 flex-shrink-0" style={{ backgroundColor: i.color }} />
+                  <img src={i.image} alt={i.name} className="w-14 h-14 flex-shrink-0 object-cover" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{i.name}</div>
                     <div className="text-xs text-[#2B2620]/60" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -314,4 +306,4 @@ export default function Duka() {
       )}
     </div>
   );
-  }
+        }
