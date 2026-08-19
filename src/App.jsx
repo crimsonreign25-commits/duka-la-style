@@ -21,7 +21,7 @@ import {
   Phone,
   ChevronDown,
 } from "lucide-react";
-import { supabase } from "./supabase";
+import { supabase } from "./supabaseClient";
 
 const WHATSAPP_NUMBER = "254710574821";
 const MPESA_NUMBER = "0710574821";
