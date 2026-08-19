@@ -1,24 +1,19 @@
-import React, { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   ShoppingBag,
-  Phone,
+  MessageCircle,
   Wallet,
   Crown,
   Flame,
-  Truck,
-  ShieldCheck,
   X,
   SlidersHorizontal,
-  Minus,
-  Plus,
-  Trash2,
-  MessageCircle,
-  ChevronDown,
 } from "lucide-react";
 
 const BRAND = "BALEKING";
 const TAGLINE = "GRADE 1 OR NOTHING";
+
+// WhatsApp number that receives customer messages
 const WHATSAPP_NUMBER = "254710574821";
 
 const PRODUCTS = [
@@ -99,7 +94,7 @@ const PRODUCTS = [
     age: "Adult",
     price: 2200,
     image:
-      "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=800&h=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1576566588028-4147f3842f27?q=80&w=800&h=1200&auto=format&fit=crop",
     note: "Cropped. Pink, Black, Cream. Sizes S-L",
   },
   {
@@ -125,9 +120,10 @@ const PRODUCTS = [
     age: "All",
     price: 900,
     image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&h=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1576566588028-4147f3842f27?q=80&w=800&h=1200&auto=format&fit=crop",
     note: "Anime, Band, Quote tees. Sizes S-XXL",
   },
+
   {
     id: 6,
     name: "BK MAXI DRESS",
@@ -220,6 +216,7 @@ const PRODUCTS = [
       "https://images.unsplash.com/photo-1519238263530-99bdd11df2fa?q=80&w=800&h=1200&auto=format&fit=crop",
     note: "Party dress. Ages 4-10",
   },
+
   {
     id: 9,
     name: "BK BLAZER SET",
@@ -308,164 +305,83 @@ const GENDERS = ["All", "Male", "Female", "Unisex"];
 const AGES = ["All", "Adult", "Child"];
 const STYLES = ["All", "Casual", "Streetwear", "Official"];
 
-const VIBES = [
-  {
-    name: "Casual",
-    desc: "Everyday King",
-    img: "https://images.unsplash.com/photo-1489987708160-a9753f8ee04b?q=80&w=900&h=700&auto=format&fit=crop",
-  },
-  {
-    name: "Official",
-    desc: "CEO Energy",
-    img: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=900&h=700&auto=format&fit=crop",
-  },
-  {
-    name: "Streetwear",
-    desc: "King Drip",
-    img: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=900&h=700&auto=format&fit=crop",
-  },
-];
-
-function formatKES(value) {
+function formatKES(n) {
   return new Intl.NumberFormat("en-KE", {
     style: "currency",
     currency: "KES",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(n);
 }
 
-function ProductCard({ product, quantity, onAdd, onRemove }) {
+function ProductCard({ product, onAdd }) {
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 18 }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.35 }}
-      className="group overflow-hidden border border-[#FFD700]/15 bg-[#0A0A0A] hover:border-[#FFD700]/70"
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      className="group bg-[#0A0A0A] border border-[#FFD700]/10 overflow-hidden hover:border-[#FFD700]"
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#111]">
+      <div className="relative h-96 flex items-end justify-center overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
-          loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
 
         {product.was && (
-          <span className="absolute left-3 top-3 bg-[#FFD700] px-2 py-1 text-[10px] font-black text-black">
+          <span className="absolute top-3 left-3 text-[10px] bg-[#FFD700] text-black font-black px-2 py-1 tracking-wider">
             KING SALE
           </span>
         )}
 
-        <div className="absolute right-3 top-3 flex max-w-[75%] flex-wrap justify-end gap-1">
-          <span className="bg-[#FFD700] px-2 py-1 text-[9px] font-black text-black">
+        <div className="absolute top-3 right-3 flex gap-1 flex-wrap justify-end max-w-[70%]">
+          <span className="text-[9px] bg-[#FFD700] text-black px-2 py-1 font-black">
             {product.style.toUpperCase()}
           </span>
-          <span className="bg-black/80 px-2 py-1 text-[9px] font-black text-[#FFD700]">
+
+          <span className="text-[9px] bg-black/80 text-[#FFD700] px-2 py-1 font-black">
             {product.gender.toUpperCase()}
           </span>
         </div>
-
-        {quantity > 0 && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-black/90 px-2 py-1 text-xs font-black">
-            <ShoppingBag size={13} className="text-[#FFD700]" />
-            {quantity} IN CART
-          </div>
-        )}
       </div>
 
       <div className="p-4">
         <h3
-          className="text-[16px] font-black tracking-wide text-white"
+          className="text-[17px] font-black text-white tracking-wide"
           style={{ fontFamily: "'Fraunces', serif" }}
         >
           {product.name}
         </h3>
 
-        <p className="mt-1 text-xs text-white/50">
-          {product.grade} · {product.category}
+        <p className="text-xs text-white/50 mt-1">
+          {product.grade} • {product.category}
         </p>
 
-        <div className="mt-3 flex items-end justify-between gap-3">
-          <span className="text-[19px] font-black text-[#FFD700]">
+        <div className="flex items-end justify-between mt-3">
+          <div className="text-[20px] font-black text-[#FFD700]">
             {formatKES(product.price)}
-          </span>
+          </div>
 
           {product.was && (
-            <span className="text-xs text-white/35 line-through">
+            <div className="text-[12px] line-through text-white/40">
               {formatKES(product.was)}
-            </span>
+            </div>
           )}
         </div>
 
-        <p className="mt-2 min-h-[40px] text-xs leading-5 text-white/55">
-          {product.note}
-        </p>
+        <p className="text-xs text-white/60 mt-2 h-8">{product.note}</p>
 
-        {quantity === 0 ? (
-          <button
-            onClick={() => onAdd(product)}
-            className="mt-3 flex w-full items-center justify-center gap-2 bg-[#FFD700] py-3 text-xs font-black tracking-widest text-black transition hover:bg-white"
-          >
-            <ShoppingBag size={15} />
-            ADD TO CART
-          </button>
-        ) : (
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              onClick={() => onRemove(product.id)}
-              className="flex h-11 w-11 items-center justify-center border border-white/20 hover:border-[#FFD700]"
-              aria-label={`Remove ${product.name}`}
-            >
-              <Minus size={16} />
-            </button>
-
-            <div className="flex h-11 flex-1 items-center justify-center border border-[#FFD700]/40 text-sm font-black">
-              {quantity}
-            </div>
-
-            <button
-              onClick={() => onAdd(product)}
-              className="flex h-11 w-11 items-center justify-center bg-[#FFD700] text-black"
-              aria-label={`Add another ${product.name}`}
-            >
-              <Plus size={16} />
-            </button>
-          </div>
-        )}
+        <button
+          onClick={() => onAdd(product)}
+          className="w-full mt-3 bg-[#FFD700] text-black font-black py-2.5 text-xs uppercase tracking-widest hover:bg-white transition-colors"
+        >
+          ADD TO CART
+        </button>
       </div>
-    </motion.article>
-  );
-}
-
-function FilterGroup({ title, options, value, onChange }) {
-  return (
-    <div>
-      <p className="mb-2 text-[10px] font-black tracking-[0.2em] text-[#FFD700]">
-        {title}
-      </p>
-
-      <div className="flex flex-wrap gap-2">
-        {options.map((option) => (
-          <button
-            key={option}
-            onClick={() => onChange(option)}
-            className={`border px-3 py-2 text-[10px] font-black transition ${
-              value === option
-                ? "border-[#FFD700] bg-[#FFD700] text-black"
-                : "border-white/15 text-white hover:border-[#FFD700]"
-            }`}
-          >
-            {option.toUpperCase()}
-          </button>
-        ))}
-      </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -474,61 +390,82 @@ export default function Duka() {
   const [genderFilter, setGenderFilter] = useState("All");
   const [ageFilter, setAgeFilter] = useState("All");
   const [styleFilter, setStyleFilter] = useState("All");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
-  const visible = useMemo(() => {
-    return PRODUCTS.filter(
-      (product) =>
-        (filter === "All" || product.category === filter) &&
-        (genderFilter === "All" ||
-          product.gender === genderFilter ||
-          product.gender === "Unisex") &&
-        (ageFilter === "All" ||
-          product.age === ageFilter ||
-          product.age === "All") &&
-        (styleFilter === "All" || product.style === styleFilter)
-    );
-  }, [filter, genderFilter, ageFilter, styleFilter]);
-
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-
-  const cartTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
+  const visible = PRODUCTS.filter(
+    (p) =>
+      (filter === "All" || p.category === filter) &&
+      (genderFilter === "All" ||
+        p.gender === genderFilter ||
+        p.gender === "Unisex") &&
+      (ageFilter === "All" || p.age === ageFilter || p.age === "All") &&
+      (styleFilter === "All" || p.style === styleFilter)
   );
 
-  const addToCart = (product) => {
-    setCart((current) => {
-      const existing = current.find((item) => item.id === product.id);
+  const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
 
-      if (existing) {
-        return current.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
+  // =========================
+  // CHAT WITH US
+  // =========================
+  const handleWhatsAppChat = () => {
+    const message = encodeURIComponent(
+      "👑 Hello BALEKING! I want to chat about your clothes."
+    );
 
-      return [...current, { ...product, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (productId) => {
-    setCart((current) =>
-      current
-        .map((item) =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity - 1 }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
+    window.open(
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,
+      "_blank"
     );
   };
 
-  const deleteFromCart = (productId) => {
-    setCart((current) => current.filter((item) => item.id !== productId));
+  // =========================
+  // MPESA
+  // =========================
+  const handleMpesaPay = () => {
+    if (cart.length === 0) {
+      alert("CART IS EMPTY KING 👑");
+      return;
+    }
+
+    const phone = prompt("ENTER MPESA NUMBER: 07XX XXX XXX");
+
+    if (phone) {
+      alert(
+        `👑 STK PUSH SENT TO ${phone} FOR ${formatKES(
+          cartTotal
+        )}\n\nENTER MPESA PIN TO COMPLETE. BALEKING APPRECIATES YOU.`
+      );
+    }
+  };
+
+  // =========================
+  // WHATSAPP ORDER
+  // =========================
+  const handleWhatsAppOrder = () => {
+    if (cart.length === 0) {
+      alert("CART IS EMPTY KING 👑");
+      return;
+    }
+
+    const items = cart
+      .map((item) => `• ${item.name} - ${formatKES(item.price)}`)
+      .join("\n");
+
+    const message = `👑 YO BALEKING! I AM THE KING.
+
+I WANT:
+
+${items}
+
+TOTAL: ${formatKES(cartTotal)}
+
+DELIVERY LOCATION:`;
+
+    window.open(
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,
+      "_blank"
+    );
   };
 
   const clearFilters = () => {
@@ -538,157 +475,167 @@ export default function Duka() {
     setStyleFilter("All");
   };
 
-  const activeFilterCount = [
-    filter !== "All",
-    genderFilter !== "All",
-    ageFilter !== "All",
-    styleFilter !== "All",
-  ].filter(Boolean).length;
-
   const selectVibe = (vibe) => {
     setStyleFilter(vibe);
-    document.getElementById("products")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
 
-  const handleMpesaInfo = () => {
-    alert(
-      "M-PESA PAYMENT\n\nPlease contact BALEKING for the official M-Pesa payment instructions.\n\nNo payment has been made."
-    );
-  };
+    setTimeout(() => {
+      const main = document.querySelector("main");
 
-  const handleWhatsAppOrder = () => {
-    if (cart.length === 0) {
-      alert("YOUR CART IS EMPTY KING 👑");
-      return;
-    }
-
-    const items = cart
-      .map(
-        (item) =>
-          `${item.quantity}x ${item.name} - ${formatKES(
-            item.price * item.quantity
-          )}`
-      )
-      .join("\n");
-
-    const message = `👑 YO BALEKING!\n\nI want to order:\n${items}\n\nTOTAL: ${formatKES(
-      cartTotal
-    )}\n\nDELIVERY LOCATION:`;
-
-    window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,
-      "_blank"
-    );
+      if (main) {
+        window.scrollTo({
+          top: main.offsetTop - 20,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,800;900&family=Inter:wght@700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,800;900&family=Inter:wght@800;900&family=JetBrains+Mono:wght@800&display=swap');
 
         body {
           font-family: 'Inter', sans-serif;
           margin: 0;
+          background: #050505;
         }
 
-        button {
-          -webkit-tap-highlight-color: transparent;
+        * {
+          box-sizing: border-box;
+        }
+
+        video {
+          pointer-events: none;
         }
       `}</style>
 
       {/* HEADER */}
-      <header className="sticky top-0 z-40 border-b-2 border-[#FFD700] bg-[#050505]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-[#FFD700] sm:h-11 sm:w-11">
-              <Crown size={23} className="text-black" />
+      <header className="sticky top-0 z-50 bg-[#050505]/95 backdrop-blur border-b-2 border-[#FFD700]">
+        <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 shrink-0 bg-[#FFD700] flex items-center justify-center">
+              <Crown size={24} className="text-black" />
             </div>
 
             <div className="min-w-0">
-              <span className="block truncate text-lg font-black tracking-[0.25em] text-[#FFD700] sm:text-2xl sm:tracking-[0.4em]">
+              <span className="tracking-[0.25em] sm:tracking-[0.4em] text-xl sm:text-2xl font-black text-[#FFD700]">
                 {BRAND}
               </span>
 
-              <div className="text-[8px] tracking-[0.3em] text-white/60 sm:text-[10px] sm:tracking-[0.5em]">
+              <div className="text-[8px] sm:text-[10px] tracking-[0.35em] sm:tracking-[0.5em] text-white/60">
                 {TAGLINE}
               </div>
             </div>
           </div>
 
-          <button
-            onClick={() => setCartOpen(true)}
-            className="relative flex items-center gap-2 border border-[#FFD700]/40 px-3 py-2 text-[10px] font-black text-[#FFD700] sm:text-xs"
-          >
-            <ShoppingBag size={16} />
-            CART
-            {cartCount > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center bg-[#FFD700] px-1 text-[9px] text-black">
-                {cartCount}
-              </span>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            {/* CHAT BUTTON */}
+            <button
+              onClick={handleWhatsAppChat}
+              className="border border-[#25D366] text-[#25D366] px-3 sm:px-4 py-3 font-black text-xs flex items-center gap-2 hover:bg-[#25D366] hover:text-white transition"
+            >
+              <MessageCircle size={17} />
+              <span className="hidden sm:inline">CHAT WITH US</span>
+              <span className="sm:hidden">CHAT</span>
+            </button>
+
+            {/* CART */}
+            <button
+              onClick={() =>
+                document
+                  .getElementById("cart")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="border border-[#FFD700]/40 text-[#FFD700] px-3 sm:px-4 py-3 font-black text-xs flex items-center gap-2 hover:bg-[#FFD700] hover:text-black transition"
+            >
+              <ShoppingBag size={17} />
+              <span>CART {cart.length > 0 && `(${cart.length})`}</span>
+            </button>
+          </div>
         </div>
       </header>
 
       {/* HERO */}
-      <section className="mx-auto max-w-6xl px-4 pb-10 pt-12 sm:px-5 sm:pb-14 sm:pt-16">
-        <div className="mb-5 flex items-center gap-2">
+      <section className="max-w-6xl mx-auto px-5 pt-16 pb-12">
+        <div className="flex items-center gap-2 mb-5">
           <Flame size={18} className="text-[#FFD700]" />
+
           <span
-            className="text-[10px] uppercase tracking-[0.25em] text-[#FFD700] sm:text-xs sm:tracking-[0.4em]"
+            className="text-xs uppercase tracking-[0.3em] text-[#FFD700]"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
             NEW BALE. NEW RULES.
           </span>
         </div>
 
-        <h1 className="mb-4 text-5xl font-black leading-[0.9] sm:text-7xl lg:text-8xl">
+        <h1 className="text-5xl sm:text-7xl lg:text-8xl leading-[0.9] mb-4 font-black">
           RULE THE <span className="text-[#FFD700]">BALE.</span>
         </h1>
 
-        <p className="mb-8 max-w-xl text-sm leading-6 text-white/65 sm:text-base">
-          We don't sell rags. We sell crowns. MPESA. Delivery Mombasa & Nairobi.
-          24hrs.
+        <p className="text-white/70 max-w-lg text-[16px] mb-6">
+          We don't sell rags. We sell crowns. MPESA. Delivery Mombasa &
+          Nairobi. 24hrs.
         </p>
 
+        {/* HERO CHAT */}
+        <button
+          onClick={handleWhatsAppChat}
+          className="bg-[#25D366] text-white font-black px-6 py-4 flex items-center justify-center gap-3 text-sm hover:scale-[1.02] transition"
+        >
+          <MessageCircle size={20} />
+          CHAT WITH US ON WHATSAPP
+        </button>
+
         {/* VIBES */}
-        <div>
+        <div className="mt-12">
           <h2
-            className="mb-4 text-xs uppercase tracking-[0.3em] text-white sm:mb-5 sm:text-sm sm:tracking-[0.4em]"
+            className="text-sm uppercase tracking-[0.4em] mb-5 text-white"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
             CHOOSE YOUR KINGDOM
           </h2>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-            {VIBES.map((vibe) => (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              {
+                name: "Casual",
+                desc: "Everyday King",
+                img: "https://images.unsplash.com/photo-1489987708160-a9753f8ee04b?q=80&w=800&h=600&auto=format&fit=crop",
+              },
+              {
+                name: "Official",
+                desc: "CEO Energy",
+                img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&h=600&auto=format&fit=crop",
+              },
+              {
+                name: "Streetwear",
+                desc: "King Drip",
+                img: "https://images.unsplash.com/photo-1529139555592-44c9473e6e5b?q=80&w=800&h=600&auto=format&fit=crop",
+              },
+            ].map((vibe) => (
               <button
                 key={vibe.name}
                 onClick={() => selectVibe(vibe.name)}
-                className="group relative h-36 overflow-hidden border-2 border-[#FFD700]/20 text-left transition hover:border-[#FFD700] sm:h-52"
+                className="group relative overflow-hidden h-52 border-2 border-[#FFD700]/20 hover:border-[#FFD700] transition-all"
               >
                 <img
                   src={vibe.img}
                   alt={vibe.name}
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 
-                <div className="absolute bottom-4 left-4">
+                <div className="absolute bottom-5 left-5 text-left">
                   <h3
-                    className="text-xl font-black text-[#FFD700] sm:text-2xl"
+                    className="text-[#FFD700] text-2xl font-black"
                     style={{ fontFamily: "'Fraunces', serif" }}
                   >
                     {vibe.name.toUpperCase()}
                   </h3>
-                  <p className="text-xs text-white/90 sm:text-sm">
-                    {vibe.desc}
-                  </p>
+
+                  <p className="text-white/90 text-sm">{vibe.desc}</p>
                 </div>
               </button>
             ))}
@@ -697,381 +644,221 @@ export default function Duka() {
       </section>
 
       {/* PRODUCTS */}
-      <main
-        id="products"
-        className="mx-auto max-w-6xl scroll-mt-24 px-4 pb-20 sm:px-5"
-      >
-        {/* FILTER BUTTON */}
-        <div className="mb-6 border border-[#FFD700]/20 bg-[#090909]">
-          <button
-            onClick={() => setFiltersOpen((open) => !open)}
-            className="flex w-full items-center justify-between p-4 text-left"
-          >
-            <span className="flex items-center gap-2 text-xs font-black text-[#FFD700]">
-              <SlidersHorizontal size={16} />
-              FILTER PRODUCTS
-              {activeFilterCount > 0 && (
-                <span className="bg-[#FFD700] px-2 py-1 text-[9px] text-black">
-                  {activeFilterCount} ACTIVE
-                </span>
-              )}
-            </span>
+      <main className="max-w-6xl mx-auto px-5 pb-20">
+        {/* MOBILE FILTER BUTTON */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="w-full mb-4 p-5 border border-[#FFD700]/30 flex items-center justify-between text-[#FFD700] font-black lg:hidden"
+        >
+          <span className="flex items-center gap-3">
+            <SlidersHorizontal size={20} />
+            FILTER PRODUCTS
+          </span>
 
-            <ChevronDown
-              size={18}
-              className={`transition-transform ${
-                filtersOpen ? "rotate-180" : ""
-              }`}
-            />
-          </button>
+          <span>{showFilters ? "−" : "+"}</span>
+        </button>
 
-          <AnimatePresence>
-            {filtersOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="space-y-5 border-t border-[#FFD700]/10 p-4">
-                  <FilterGroup
-                    title="CATEGORY"
-                    options={CATEGORIES}
-                    value={filter}
-                    onChange={setFilter}
-                  />
+        {/* FILTERS */}
+        <div
+          className={`mb-6 p-4 border border-[#FFD700]/20 ${
+            showFilters ? "block" : "hidden lg:block"
+          }`}
+        >
+          <FilterRow
+            title="CATEGORY"
+            items={CATEGORIES}
+            value={filter}
+            setValue={setFilter}
+          />
 
-                  <FilterGroup
-                    title="GENDER"
-                    options={GENDERS}
-                    value={genderFilter}
-                    onChange={setGenderFilter}
-                  />
+          <FilterRow
+            title="GENDER"
+            items={GENDERS}
+            value={genderFilter}
+            setValue={setGenderFilter}
+          />
 
-                  <FilterGroup
-                    title="AGE"
-                    options={AGES}
-                    value={ageFilter}
-                    onChange={setAgeFilter}
-                  />
+          <FilterRow
+            title="AGE"
+            items={AGES}
+            value={ageFilter}
+            setValue={setAgeFilter}
+          />
 
-                  <FilterGroup
-                    title="VIBE"
-                    options={STYLES}
-                    value={styleFilter}
-                    onChange={setStyleFilter}
-                  />
-
-                  {activeFilterCount > 0 && (
-                    <button
-                      onClick={clearFilters}
-                      className="flex items-center gap-1 text-xs font-black text-white underline"
-                    >
-                      <X size={13} />
-                      CLEAR ALL FILTERS
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <FilterRow
+            title="VIBE"
+            items={STYLES}
+            value={styleFilter}
+            setValue={setStyleFilter}
+          />
         </div>
 
         {/* ACTIVE FILTERS */}
-        {activeFilterCount > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-[10px] text-[#FFD700]">FILTERING:</span>
+        {(filter !== "All" ||
+          genderFilter !== "All" ||
+          ageFilter !== "All" ||
+          styleFilter !== "All") && (
+          <div className="mb-6 flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-[#FFD700]">FILTERING:</span>
 
             {filter !== "All" && (
-              <span className="bg-[#FFD700] px-2 py-1 text-[10px] font-black text-black">
-                {filter}
-              </span>
+              <FilterTag text={filter} />
             )}
 
             {genderFilter !== "All" && (
-              <span className="bg-[#FFD700] px-2 py-1 text-[10px] font-black text-black">
-                {genderFilter}
-              </span>
+              <FilterTag text={genderFilter} />
             )}
 
             {ageFilter !== "All" && (
-              <span className="bg-[#FFD700] px-2 py-1 text-[10px] font-black text-black">
-                {ageFilter}
-              </span>
+              <FilterTag text={ageFilter} />
             )}
 
             {styleFilter !== "All" && (
-              <span className="bg-[#FFD700] px-2 py-1 text-[10px] font-black text-black">
-                {styleFilter}
-              </span>
+              <FilterTag text={styleFilter} />
             )}
+
+            <button
+              onClick={clearFilters}
+              className="text-xs underline flex items-center gap-1"
+            >
+              <X size={12} />
+              CLEAR ALL
+            </button>
           </div>
         )}
 
-        <div className="mb-5 flex items-end justify-between">
-          <div>
-            <p className="text-xs text-white/40">SHOWING</p>
-            <h2 className="text-2xl font-black text-white">
-              {visible.length} KING PICKS
-            </h2>
-          </div>
+        {/* PRODUCT GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {visible.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAdd={(item) => setCart([...cart, item])}
+            />
+          ))}
         </div>
 
-        {visible.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-            {visible.map((product) => {
-              const cartItem = cart.find((item) => item.id === product.id);
+        {visible.length === 0 && (
+          <div className="text-center py-20 border border-white/10">
+            <p className="text-[#FFD700] font-black">
+              NO PRODUCTS FOUND 👑
+            </p>
 
-              return (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  quantity={cartItem?.quantity || 0}
-                  onAdd={addToCart}
-                  onRemove={removeFromCart}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <div className="border border-[#FFD700]/20 p-10 text-center">
-            <Crown className="mx-auto mb-3 text-[#FFD700]" />
-            <h3 className="text-xl font-black">NO KING PICKS FOUND</h3>
             <button
               onClick={clearFilters}
-              className="mt-4 bg-[#FFD700] px-5 py-3 text-xs font-black text-black"
+              className="mt-4 underline text-sm"
             >
               CLEAR FILTERS
             </button>
           </div>
         )}
 
-        {/* TRUST STRIP */}
-        <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="border border-white/10 p-4">
-            <Truck className="mb-2 text-[#FFD700]" size={20} />
-            <p className="text-xs font-black">FAST DELIVERY</p>
-            <p className="mt-1 text-[10px] text-white/45">
-              Mombasa & Nairobi
-            </p>
-          </div>
+        {/* CART */}
+        {cart.length > 0 && (
+          <div
+            id="cart"
+            className="mt-12 p-6 border-2 border-[#FFD700] bg-[#0A0A0A]"
+          >
+            <h3
+              className="text-2xl font-black mb-4 text-[#FFD700]"
+              style={{ fontFamily: "'Fraunces', serif" }}
+            >
+              YOUR KING'S CART 👑
+            </h3>
 
-          <div className="border border-white/10 p-4">
-            <ShieldCheck className="mb-2 text-[#FFD700]" size={20} />
-            <p className="text-xs font-black">GRADE 1 QUALITY</p>
-            <p className="mt-1 text-[10px] text-white/45">
-              Selected bale pieces
-            </p>
-          </div>
+            {cart.map((item, index) => (
+              <div
+                key={`${item.id}-${index}`}
+                className="flex justify-between gap-3 text-sm py-2 border-b border-white/5"
+              >
+                <span>{item.name}</span>
 
-          <div className="border border-white/10 p-4">
-            <MessageCircle className="mb-2 text-[#FFD700]" size={20} />
-            <p className="text-xs font-black">ORDER ON WHATSAPP</p>
-            <p className="mt-1 text-[10px] text-white/45">
-              Quick order confirmation
-            </p>
+                <span className="text-[#FFD700]">
+                  {formatKES(item.price)}
+                </span>
+              </div>
+            ))}
+
+            <div className="flex justify-between font-black text-xl border-t-2 border-[#FFD700] pt-3 mt-3 text-[#FFD700]">
+              <span>TOTAL</span>
+              <span>{formatKES(cartTotal)}</span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-5">
+              <button
+                onClick={handleMpesaPay}
+                className="flex-1 bg-[#FFD700] text-black font-black py-4 flex items-center justify-center gap-2 text-sm"
+              >
+                <Wallet size={18} />
+                PAY WITH MPESA
+              </button>
+
+              <button
+                onClick={handleWhatsAppOrder}
+                className="flex-1 bg-[#25D366] text-white font-black py-4 flex items-center justify-center gap-2 text-sm"
+              >
+                <MessageCircle size={18} />
+                ORDER ON WHATSAPP
+              </button>
+            </div>
+
+            <button
+              onClick={() => setCart([])}
+              className="w-full mt-3 border border-white/20 py-3 text-xs font-black hover:border-red-500 hover:text-red-500"
+            >
+              EMPTY CART
+            </button>
           </div>
-        </div>
+        )}
       </main>
 
-      {/* CART DRAWER */}
-      <AnimatePresence>
-        {cartOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setCartOpen(false)}
-              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
-            />
-
-            <motion.aside
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 28 }}
-              className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-[#FFD700]/30 bg-[#080808]"
-            >
-              <div className="flex items-center justify-between border-b border-[#FFD700]/20 p-5">
-                <div>
-                  <p className="text-[10px] tracking-[0.3em] text-[#FFD700]">
-                    YOUR
-                  </p>
-                  <h2
-                    className="text-2xl font-black"
-                    style={{ fontFamily: "'Fraunces', serif" }}
-                  >
-                    KING'S CART 👑
-                  </h2>
-                </div>
-
-                <button
-                  onClick={() => setCartOpen(false)}
-                  className="p-2 text-white/60 hover:text-white"
-                >
-                  <X />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-5">
-                {cart.length === 0 ? (
-                  <div className="flex h-full flex-col items-center justify-center text-center">
-                    <ShoppingBag size={45} className="mb-4 text-[#FFD700]" />
-                    <h3 className="text-xl font-black">CART IS EMPTY</h3>
-                    <p className="mt-2 text-xs text-white/45">
-                      Add some king pieces to get started.
-                    </p>
-
-                    <button
-                      onClick={() => setCartOpen(false)}
-                      className="mt-5 bg-[#FFD700] px-5 py-3 text-xs font-black text-black"
-                    >
-                      SHOP NOW
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {cart.map((item) => (
-                      <div
-                        key={item.id}
-                        className="border border-white/10 bg-[#0D0D0D] p-3"
-                      >
-                        <div className="flex gap-3">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-20 w-16 object-cover"
-                          />
-
-                          <div className="min-w-0 flex-1">
-                            <h3 className="truncate text-sm font-black">
-                              {item.name}
-                            </h3>
-
-                            <p className="mt-1 text-xs text-[#FFD700]">
-                              {formatKES(item.price)}
-                            </p>
-
-                            <div className="mt-2 flex items-center gap-2">
-                              <button
-                                onClick={() => removeFromCart(item.id)}
-                                className="flex h-7 w-7 items-center justify-center border border-white/20"
-                              >
-                                <Minus size={12} />
-                              </button>
-
-                              <span className="text-xs font-black">
-                                {item.quantity}
-                              </span>
-
-                              <button
-                                onClick={() => addToCart(item)}
-                                className="flex h-7 w-7 items-center justify-center bg-[#FFD700] text-black"
-                              >
-                                <Plus size={12} />
-                              </button>
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={() => deleteFromCart(item.id)}
-                            className="self-start text-white/30 hover:text-red-400"
-                            aria-label={`Remove ${item.name}`}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {cart.length > 0 && (
-                <div className="border-t border-[#FFD700]/30 p-5">
-                  <div className="mb-4 flex items-center justify-between">
-                    <span className="text-xs text-white/50">TOTAL</span>
-                    <span className="text-2xl font-black text-[#FFD700]">
-                      {formatKES(cartTotal)}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={handleWhatsAppOrder}
-                    className="mb-3 flex w-full items-center justify-center gap-2 bg-[#25D366] py-4 text-xs font-black text-white"
-                  >
-                    <MessageCircle size={18} />
-                    ORDER ON WHATSAPP
-                  </button>
-
-                  <button
-                    onClick={handleMpesaInfo}
-                    className="flex w-full items-center justify-center gap-2 border border-[#FFD700] py-4 text-xs font-black text-[#FFD700]"
-                  >
-                    <Wallet size={18} />
-                    M-PESA PAYMENT INFO
-                  </button>
-
-                  <p className="mt-3 text-center text-[9px] leading-4 text-white/35">
-                    Payment is not processed by this website. Contact BALEKING
-                    for official payment instructions.
-                  </p>
-                </div>
-              )}
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* FLOATING CART */}
-      {cartCount > 0 && !cartOpen && (
-        <motion.button
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          onClick={() => setCartOpen(true)}
-          className="fixed bottom-4 left-4 right-4 z-30 flex items-center justify-between bg-[#FFD700] px-5 py-4 text-black shadow-2xl sm:left-auto sm:right-6 sm:w-80"
-        >
-          <span className="flex items-center gap-2 text-xs font-black">
-            <ShoppingBag size={18} />
-            {cartCount} {cartCount === 1 ? "ITEM" : "ITEMS"}
-          </span>
-
-          <span className="text-sm font-black">
-            {formatKES(cartTotal)} →
-          </span>
-        </motion.button>
-      )}
+      {/* FLOATING WHATSAPP */}
+      <button
+        onClick={handleWhatsAppChat}
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
+        aria-label="Chat with BALEKING on WhatsApp"
+      >
+        <MessageCircle size={27} />
+      </button>
 
       {/* FOOTER */}
       <footer className="border-t-2 border-[#FFD700] py-10">
-        <div className="mx-auto max-w-6xl px-5">
-          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-            <div>
-              <div className="text-xl font-black tracking-[0.3em] text-[#FFD700]">
-                {BRAND}
-              </div>
-              <div className="mt-1 text-[9px] tracking-[0.3em] text-white/40">
-                {TAGLINE}
-              </div>
-            </div>
-
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex w-fit items-center gap-2 border border-[#25D366] px-4 py-3 text-xs font-black text-[#25D366]"
-            >
-              <Phone size={15} />
-              CONTACT BALEKING
-            </a>
-          </div>
-
-          <p className="mt-8 text-[10px] text-white/35">
-            © {new Date().getFullYear()} {BRAND}. {TAGLINE}. ALL HAIL THE KING.
-          </p>
+        <div className="max-w-6xl mx-auto px-5 text-xs text-white/60">
+          © {new Date().getFullYear()} {BRAND}. {TAGLINE}. ALL HAIL THE KING.
         </div>
       </footer>
     </div>
+  );
+}
+
+function FilterRow({ title, items, value, setValue }) {
+  return (
+    <div className="flex flex-wrap gap-2 mb-3 last:mb-0">
+      <span className="text-xs font-black mr-2 pt-2 text-[#FFD700]">
+        {title}:
+      </span>
+
+      {items.map((item) => (
+        <button
+          key={item}
+          onClick={() => setValue(item)}
+          className={`text-xs px-4 py-1.5 border ${
+            value === item
+              ? "bg-[#FFD700] text-black font-black border-[#FFD700]"
+              : "border-white/20 hover:border-[#FFD700]"
+          }`}
+        >
+          {item.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FilterTag({ text }) {
+  return (
+    <span className="text-xs bg-[#FFD700] text-black px-2 py-1 font-black">
+      {text}
+    </span>
   );
 }
