@@ -1,39 +1,41 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
+html {
+  scroll-behavior: smooth;
+}
 
-    <meta
-      name="theme-color"
-      content="#050505"
-    />
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #050505;
+  color: #ffffff;
+  font-family: Inter, Arial, sans-serif;
+}
 
-    <meta
-      name="description"
-      content="BALEKING — Grade 1 or Nothing."
-    />
+* {
+  box-sizing: border-box;
+}
 
-    <title>BALEKING — Grade 1 or Nothing</title>
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
 
-    <link rel="icon" href="/favicon.svg" />
+button {
+  cursor: pointer;
+}
 
-    <link
-      rel="manifest"
-      href="/manifest.webmanifest"
-    />
-  </head>
+img {
+  max-width: 100%;
+  display: block;
+}
 
-  <body>
-    <div id="root"></div>
-
-    <script
-      type="module"
-      src="/src/main.jsx"
-    ></script>
-  </body>
-</html>
+::selection {
+  background: #ffd700;
+  color: #000000;
+}
