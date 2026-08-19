@@ -1,1748 +1,249 @@
-import React, { useMemo, useState } from "react";
-import {
-  ShoppingBag,
-  X,
-  Plus,
-  Minus,
-  MessageCircle,
-  Sparkles,
-  CreditCard,
-  Phone,
-  ShieldCheck,
-  Heart,
-  ArrowRight,
-  Star,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  SlidersHorizontal,
-  Check,
-} from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { ShoppingBag, X, Plus, Minus, MessageCircle, Sparkles, Tag, Phone, CheckCircle } from "lucide-react";
 
-/* =========================================================
-   DUKA LA STYLE — COMPLETE UPGRADED APP
-   - Men / Women / Kids
-   - Premium / Casual / Formal / Elegant / Streetwear
-   - Large varied product catalogue
-   - Individual image sets
-   - Search + filters
-   - Product image slider
-   - Cart
-   - WhatsApp ordering
-   - Payment section
-========================================================= */
+const PRODUCTS = [
+  // PRINTED T-SHIRTS
+  {
+    id: 1,
+    name: "DLS Graphic Tee",
+    grade: "Grade 1 · Cotton",
+    category: "Printed T-Shirts",
+    price: 2500,
+    was: 3200,
+    image: "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Bold front print. Oversized fit.",
+  },
+  {
+    id: 2,
+    name: "Vintage Logo Tee",
+    grade: "Grade 1",
+    category: "Printed T-Shirts",
+    price: 2300,
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Washed look. 100% cotton.",
+  },
+  
+  // HOODIES
+  {
+    id: 3,
+    name: "DLS Signature Hoodie",
+    grade: "Grade 1 · Heavy",
+    category: "Hoodies",
+    price: 4500,
+    was: 5500,
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Oversized. Perfect for Mombasa evenings.",
+  },
+  {
+    id: 4,
+    name: "Zip-Up Hoodie Black",
+    grade: "Grade 1",
+    category: "Hoodies",
+    price: 4200,
+    image: "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Thick fleece. Front pockets.",
+  },
+
+  // CAPS
+  {
+    id: 5,
+    name: "DLS Black Cap",
+    grade: "Grade 1",
+    category: "Caps",
+    price: 1200,
+    image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Embroidered logo. Adjustable.",
+  },
+  {
+    id: 6,
+    name: "Dad Cap Cream",
+    grade: "Grade 1",
+    category: "Caps",
+    price: 1300,
+    image: "https://images.unsplash.com/photo-1576871396354-1e4e8fae8b2c?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Curved brim. Low profile.",
+  },
+
+  // T-SHIRTS
+  {
+    id: 7,
+    name: "Classic Black T-Shirt",
+    grade: "Grade 1",
+    category: "T-Shirts",
+    price: 1800,
+    image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Essential. True to size.",
+  },
+
+  // JEANS + TROUSERS
+  {
+    id: 8,
+    name: "High-Waist Skinny Jeans",
+    grade: "Grade 1",
+    category: "Jeans",
+    price: 2500,
+    image: "https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Stretch fit. No rips.",
+  },
+  {
+    id: 9,
+    name: "Smart Office Trousers",
+    grade: "Grade 1 · Cream",
+    category: "Trousers",
+    price: 2000,
+    image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=400&h=500&auto=format&fit=crop",
+    note: "Tailored fit. Office-ready.",
+  },
+];
 
 const WHATSAPP_NUMBER = "254710574821";
 
-/* =========================================================
-   IMAGE LIBRARY
-   Each group contains different clothing images, sourced from
-   LoremFlickr (a free, keyword-based photo service). Each product
-   gets 2 images — if the first fails to load, SafeImage below
-   automatically falls back to the second.
-========================================================= */
-
-const IMG = {
-  menTrousers: [
-    "https://loremflickr.com/400/500/trousers,men?lock=1",
-    "https://loremflickr.com/400/500/trousers?lock=2",
-    "https://loremflickr.com/400/500/menswear?lock=3",
-  ],
-
-  menShirts: [
-    "https://loremflickr.com/400/500/shirt,men?lock=1",
-    "https://loremflickr.com/400/500/shirt?lock=2",
-    "https://loremflickr.com/400/500/menswear?lock=4",
-  ],
-
-  menTshirts: [
-    "https://loremflickr.com/400/500/tshirt?lock=1",
-    "https://loremflickr.com/400/500/tshirt?lock=2",
-    "https://loremflickr.com/400/500/tshirt?lock=3",
-  ],
-
-  menJackets: [
-    "https://loremflickr.com/400/500/jacket,men?lock=1",
-    "https://loremflickr.com/400/500/jacket?lock=2",
-  ],
-
-  menJeans: [
-    "https://loremflickr.com/400/500/jeans?lock=1",
-    "https://loremflickr.com/400/500/jeans?lock=2",
-  ],
-
-  menShorts: [
-    "https://loremflickr.com/400/500/shorts?lock=1",
-    "https://loremflickr.com/400/500/shorts?lock=2",
-  ],
-
-  womenDresses: [
-    "https://loremflickr.com/400/500/dress?lock=1",
-    "https://loremflickr.com/400/500/dress?lock=2",
-    "https://loremflickr.com/400/500/dress?lock=3",
-    "https://loremflickr.com/400/500/dress?lock=4",
-  ],
-
-  womenSkirts: [
-    "https://loremflickr.com/400/500/skirt?lock=1",
-    "https://loremflickr.com/400/500/skirt?lock=2",
-  ],
-
-  womenTrousers: [
-    "https://loremflickr.com/400/500/trousers,women?lock=1",
-    "https://loremflickr.com/400/500/trousers?lock=5",
-  ],
-
-  womenTops: [
-    "https://loremflickr.com/400/500/blouse?lock=1",
-    "https://loremflickr.com/400/500/blouse?lock=2",
-  ],
-
-  womenJackets: [
-    "https://loremflickr.com/400/500/jacket,women?lock=1",
-    "https://loremflickr.com/400/500/jacket?lock=6",
-  ],
-
-  womenJeans: [
-    "https://loremflickr.com/400/500/jeans,women?lock=1",
-    "https://loremflickr.com/400/500/jeans?lock=7",
-  ],
-
-  kidsTrousers: [
-    "https://loremflickr.com/400/500/kids,clothing?lock=1",
-    "https://loremflickr.com/400/500/children,clothing?lock=2",
-  ],
-
-  kidsTshirts: [
-    "https://loremflickr.com/400/500/kids,tshirt?lock=1",
-    "https://loremflickr.com/400/500/children?lock=3",
-  ],
-
-  kidsShorts: [
-    "https://loremflickr.com/400/500/kids,shorts?lock=1",
-    "https://loremflickr.com/400/500/children?lock=4",
-  ],
-
-  girls: [
-    "https://loremflickr.com/400/500/girl,dress?lock=1",
-    "https://loremflickr.com/400/500/children?lock=5",
-  ],
-};
-
-/* =========================================================
-   PRODUCT IMAGE ASSIGNMENT
-   Different products use different starting images.
-========================================================= */
-
-const imageAt = (group, start = 0, count = 2) => {
-  const arr = IMG[group] || IMG.menShirts;
-  const result = [];
-
-  for (let i = 0; i < count; i++) {
-    result.push(arr[(start + i) % arr.length]);
-  }
-
-  return [...new Set(result)];
-};
-
-/* =========================================================
-   PRODUCT CATALOGUE
-========================================================= */
-
-const productSeed = [
-  /* ---------------- MEN / PREMIUM ---------------- */
-
-  ["Premium Tailored Trousers","Men","Trousers","Premium",1200,"menTrousers",0,4.9],
-  ["Luxury Formal Shirt","Men","Shirts","Premium",1000,"menShirts",0,4.9],
-  ["Premium Classic Shirt","Men","Shirts","Premium",950,"menShirts",1,4.8],
-  ["Premium Polo Shirt","Men","T-Shirts","Premium",850,"menTshirts",0,4.8],
-  ["Premium Dark Jeans","Men","Jeans","Premium",1100,"menJeans",0,4.9],
-  ["Premium Denim Jacket","Men","Jackets","Premium",1400,"menJackets",0,4.9],
-
-  /* ---------------- MEN / CASUAL ---------------- */
-
-  ["Relaxed Chino Trousers","Men","Trousers","Casual",700,"menTrousers",1,4.8],
-  ["Everyday Chino Trousers","Men","Trousers","Casual",650,"menTrousers",2,4.7],
-  ["Weekend Casual Shirt","Men","Shirts","Casual",600,"menShirts",2,4.7],
-  ["Essential White T-Shirt","Men","T-Shirts","Casual",400,"menTshirts",1,4.7],
-  ["Classic Black T-Shirt","Men","T-Shirts","Casual",400,"menTshirts",2,4.8],
-  ["Everyday Blue Jeans","Men","Jeans","Casual",800,"menJeans",1,4.8],
-  ["Classic Casual Shorts","Men","Shorts","Casual",450,"menShorts",0,4.7],
-  ["Weekend Shorts","Men","Shorts","Casual",500,"menShorts",1,4.8],
-  ["Denim Jacket","Men","Jackets","Casual",1200,"menJackets",1,4.9],
-
-  /* ---------------- MEN / FORMAL ---------------- */
-
-  ["Smart Office Trousers","Men","Trousers","Formal",850,"menTrousers",0,4.9],
-  ["Classic Button Shirt","Men","Shirts","Formal",750,"menShirts",1,4.8],
-  ["Elegant Office Shirt","Men","Shirts","Formal",800,"menShirts",2,4.8],
-
-  /* ---------------- MEN / STREETWEAR ---------------- */
-
-  ["Oversized Street T-Shirt","Men","T-Shirts","Streetwear",500,"menTshirts",0,4.8],
-  ["Urban Graphic T-Shirt","Men","T-Shirts","Streetwear",550,"menTshirts",1,4.8],
-  ["Street Denim Jeans","Men","Jeans","Streetwear",900,"menJeans",0,4.8],
-
-  /* ---------------- WOMEN / PREMIUM ---------------- */
-
-  ["Elegant Evening Dress","Women","Dresses","Premium",1600,"womenDresses",0,5.0],
-  ["Luxury Maxi Dress","Women","Dresses","Premium",1500,"womenDresses",1,4.9],
-  ["Premium Tailored Trousers","Women","Trousers","Premium",1000,"womenTrousers",0,4.9],
-  ["Premium Fashion Top","Women","Tops","Premium",850,"womenTops",0,4.9],
-  ["Premium Denim Jacket","Women","Jackets","Premium",1400,"womenJackets",0,4.9],
-  ["Premium Women's Jeans","Women","Jeans","Premium",1000,"womenJeans",0,4.9],
-
-  /* ---------------- WOMEN / CASUAL ---------------- */
-
-  ["Floral Casual Dress","Women","Dresses","Casual",800,"womenDresses",2,4.9],
-  ["Everyday Midi Dress","Women","Dresses","Casual",750,"womenDresses",3,4.8],
-  ["Casual Women's Top","Women","Tops","Casual",450,"womenTops",1,4.7],
-  ["Relaxed Fit Top","Women","Tops","Casual",500,"womenTops",0,4.7],
-  ["Wide-Leg Casual Trousers","Women","Trousers","Casual",750,"womenTrousers",1,4.8],
-  ["Classic Women's Jeans","Women","Jeans","Casual",750,"womenJeans",1,4.8],
-  ["High-Rise Jeans","Women","Jeans","Casual",850,"womenJeans",0,4.9],
-  ["Everyday Denim Jacket","Women","Jackets","Casual",1100,"womenJackets",1,4.8],
-
-  /* ---------------- WOMEN / ELEGANT ---------------- */
-
-  ["Elegant Midi Skirt","Women","Skirts","Elegant",700,"womenSkirts",0,4.8],
-  ["Pleated Skirt","Women","Skirts","Elegant",750,"womenSkirts",1,4.9],
-  ["Ankara Print Skirt","Women","Skirts","Elegant",650,"womenSkirts",0,4.8],
-  ["Statement Fashion Top","Women","Tops","Elegant",600,"womenTops",1,4.8],
-  ["Elegant Long Dress","Women","Dresses","Elegant",1200,"womenDresses",1,4.9],
-
-  /* ---------------- WOMEN / STREETWEAR ---------------- */
-
-  ["Urban Denim Jacket","Women","Jackets","Streetwear",1150,"womenJackets",0,4.8],
-  ["Street Style Jeans","Women","Jeans","Streetwear",850,"womenJeans",1,4.8],
-  ["Casual Street Top","Women","Tops","Streetwear",550,"womenTops",0,4.7],
-
-  /* ---------------- KIDS / PREMIUM ---------------- */
-
-  ["Boys' Smart Outfit","Kids","Boys","Premium",800,"kidsTrousers",0,4.9],
-  ["Girls' Elegant Outfit","Kids","Girls","Premium",850,"girls",0,4.9],
-  ["Kids' Smart Trousers","Kids","Trousers","Premium",550,"kidsTrousers",1,4.8],
-
-  /* ---------------- KIDS / CASUAL ---------------- */
-
-  ["Boys' Everyday T-Shirt","Kids","Boys","Casual",350,"kidsTshirts",0,4.7],
-  ["Boys' Casual Shorts","Kids","Boys","Casual",350,"kidsShorts",0,4.7],
-  ["Boys' Casual Trousers","Kids","Boys","Casual",450,"kidsTrousers",1,4.8],
-  ["Girls' Casual Outfit","Kids","Girls","Casual",550,"girls",1,4.8],
-  ["Girls' Everyday Dress","Kids","Girls","Casual",600,"girls",0,4.8],
-  ["Kids' Graphic T-Shirt","Kids","T-Shirts","Streetwear",350,"kidsTshirts",1,4.8],
-  ["Kids' Essential T-Shirt","Kids","T-Shirts","Casual",300,"kidsTshirts",0,4.6],
-  ["Kids' Casual Shorts","Kids","Shorts","Casual",350,"kidsShorts",1,4.7],
-
-  /* ---------------- KIDS / SMART ---------------- */
-
-  ["Boys' Smart Trousers","Kids","Trousers","Formal",550,"kidsTrousers",0,4.8],
-  ["Girls' Smart Outfit","Kids","Girls","Elegant",700,"girls",1,4.9],
-];
-
-/* Build final product objects */
-
-const products = productSeed.map((p, index) => ({
-  id: index + 1,
-  name: p[0],
-  gender: p[1],
-  category: p[2],
-  style: p[3],
-  collection: p[3],
-  price: p[4],
-  images: imageAt(p[5], p[6], 2),
-  rating: p[7],
-  note:
-    `Stylish ${p[3].toLowerCase()} ${p[2].toLowerCase()} selected for comfort, quality and easy styling.`
-}));
-
-/* =========================================================
-   MONEY
-========================================================= */
-
-const money = (n) =>
-  `KSh ${Number(n).toLocaleString("en-KE")}`;
-
-/* =========================================================
-   SAFE IMAGE
-========================================================= */
-
-function SafeImage({ images, alt, className = "" }) {
-  const [index, setIndex] = useState(0);
-
-  const list =
-    images && images.length
-      ? images
-      : [IMG.menShirts[0]];
-
-  return (
-    <img
-      src={list[index]}
-      alt={alt}
-      loading="lazy"
-      onError={() => {
-        if (index < list.length - 1) {
-          setIndex(index + 1);
-        }
-      }}
-      className={className}
-    />
-  );
+function formatKES(n) {
+  return "KSh " + n.toLocaleString("en-KE");
 }
 
-/* =========================================================
-   IMAGE SLIDER
-========================================================= */
-
-function ImageSlider({ product }) {
-  const [index, setIndex] = useState(0);
-
-  const images =
-    product?.images?.length
-      ? product.images
-      : [IMG.menShirts[0]];
-
-  const previous = (e) => {
-    e.stopPropagation();
-    setIndex(
-      (index - 1 + images.length) % images.length
-    );
+function Tag_({ children, tone = "clay" }) {
+  const tones = {
+    clay: "bg-[#BC5B39] text-[#F3E9DA]",
+    marigold: "bg-[#E8A63D] text-[#1C2541]",
+    ink: "bg-[#1C2541] text-[#F3E9DA]",
   };
-
-  const next = (e) => {
-    e.stopPropagation();
-    setIndex((index + 1) % images.length);
-  };
-
   return (
-    <div className="relative h-full bg-[#e8ddcb] overflow-hidden">
-      <SafeImage
-        images={[images[index]]}
-        alt={product.name}
-        className="w-full h-full object-cover"
-      />
-
-      {images.length > 1 && (
-        <>
-          <button
-            onClick={previous}
-            className="absolute left-3 top-1/2 -translate-y-1/2
-            w-9 h-9 rounded-full bg-white/90
-            flex items-center justify-center shadow"
-          >
-            <ChevronLeft size={17} />
-          </button>
-
-          <button
-            onClick={next}
-            className="absolute right-3 top-1/2 -translate-y-1/2
-            w-9 h-9 rounded-full bg-white/90
-            flex items-center justify-center shadow"
-          >
-            <ChevronRight size={17} />
-          </button>
-
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-            {images.map((_, i) => (
-              <span
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full ${
-                  i === index
-                    ? "bg-white"
-                    : "bg-white/50"
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    <span className={`inline-flex items-center gap-1 text-[11px] tracking-wide uppercase px-2 py-1 ${tones[tone]}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+      {children}
+    </span>
   );
 }
 
-/* =========================================================
-   PRODUCT CARD
-========================================================= */
-
-function Card({ p, onAdd, onView }) {
-  const [liked, setLiked] = useState(false);
-
+function ProductCard({ product, onBuy }) {
   return (
-    <article
-      className="
-      group bg-white
-      border border-[#1c2541]/10
-      rounded-xl overflow-hidden
-      shadow-sm hover:shadow-2xl
-      hover:-translate-y-1
-      transition-all duration-300
-      "
-    >
-      <div
-        className="relative h-72 cursor-pointer"
-        onClick={() => onView(p)}
-      >
-        <ImageSlider product={p} />
-
-        <div className="absolute top-3 left-3 flex flex-col gap-1">
-          <span
-            className="
-            bg-[#bc5b39] text-white
-            text-[10px] uppercase tracking-wider
-            px-2.5 py-1
-            "
-          >
-            {p.style}
-          </span>
-
-          <span
-            className="
-            bg-[#1c2541]/90 text-white
-            text-[9px] uppercase tracking-wider
-            px-2.5 py-1
-            "
-          >
-            {p.gender}
-          </span>
-        </div>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setLiked(!liked);
-          }}
-          className="
-          absolute top-3 right-3
-          w-9 h-9 rounded-full
-          bg-white/90
-          flex items-center justify-center
-          shadow-sm
-          "
-        >
-          <Heart
-            size={17}
-            fill={liked ? "#bc5b39" : "none"}
-            className={
-              liked
-                ? "text-[#bc5b39]"
-                : "text-[#1c2541]"
-            }
-          />
-        </button>
-      </div>
-
-      <div className="p-4">
-        <div
-          className="
-          flex justify-between
-          text-[10px] uppercase
-          tracking-widest text-[#bc5b39]
-          "
-        >
-          <span>
-            {p.gender} · {p.category}
-          </span>
-
-          <span className="flex items-center gap-1">
-            <Star
-              size={11}
-              fill="#e8a63d"
-              className="text-[#e8a63d]"
-            />
-            {p.rating}
-          </span>
-        </div>
-
-        <h3 className="font-semibold text-lg text-[#1c2541] mt-2">
-          {p.name}
-        </h3>
-
-        <p className="text-sm opacity-55 mt-1 h-10 overflow-hidden">
-          {p.note}
-        </p>
-
-        <div className="flex items-center justify-between mt-4">
-          <strong className="text-[#bc5b39] text-lg">
-            {money(p.price)}
-          </strong>
-
-          <button
-            onClick={() => onAdd(p)}
-            className="
-            bg-[#1c2541] text-white
-            px-4 py-2.5 rounded-lg
-            text-xs uppercase
-            flex items-center gap-1
-            hover:bg-[#bc5b39]
-            transition
-            "
-          >
-            <Plus size={15} />
-            Add
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-/* =========================================================
-   PRODUCT MODAL
-========================================================= */
-
-function Modal({ p, onClose, onAdd }) {
-  if (!p) return null;
-
-  return (
-    <div
-      className="
-      fixed inset-0 z-[80]
-      bg-black/60
-      flex items-center justify-center
-      p-4
-      "
-    >
-      <div
-        className="
-        relative bg-[#f3e9da]
-        rounded-2xl overflow-hidden
-        max-w-4xl w-full
-        max-h-[92vh]
-        overflow-y-auto
-        "
-      >
-        <button
-          onClick={onClose}
-          className="
-          absolute right-4 top-4 z-10
-          w-10 h-10 bg-white
-          rounded-full
-          flex items-center justify-center
-          shadow
-          "
-        >
-          <X size={19} />
-        </button>
-
-        <div className="grid md:grid-cols-2">
-          <div className="h-[430px] md:h-[600px]">
-            <ImageSlider product={p} />
-          </div>
-
-          <div className="p-7 md:p-10 flex flex-col justify-center">
-            <span className="text-[10px] uppercase tracking-widest text-[#bc5b39]">
-              {p.gender} · {p.category} · {p.style}
-            </span>
-
-            <h2
-              className="
-              font-semibold text-3xl
-              text-[#1c2541] mt-2
-              "
-            >
-              {p.name}
-            </h2>
-
-            <div className="flex items-center gap-1 mt-3">
-              <Star
-                size={15}
-                fill="#e8a63d"
-                className="text-[#e8a63d]"
-              />
-              {p.rating}/5
-            </div>
-
-            <p className="opacity-65 leading-relaxed mt-5">
-              {p.note}
-            </p>
-
-            <div className="text-3xl font-bold text-[#bc5b39] mt-6">
-              {money(p.price)}
-            </div>
-
-            <button
-              onClick={() => {
-                onAdd(p);
-                onClose();
-              }}
-              className="
-              mt-7 bg-[#1c2541]
-              text-white py-4 rounded-xl
-              flex items-center
-              justify-center gap-2
-              uppercase
-              hover:bg-[#bc5b39]
-              "
-            >
-              <ShoppingBag size={18} />
-              Add to Bag
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   PAYMENT
-========================================================= */
-
-function Payment({ total, cart }) {
-  const [phone, setPhone] = useState("");
-  const [method, setMethod] = useState("mpesa");
-  const [msg, setMsg] = useState("");
-
-  const pay = () => {
-    if (!cart.length) {
-      setMsg("Add an item to your bag first.");
-      return;
-    }
-
-    if (!phone.trim()) {
-      setMsg("Enter your phone number.");
-      return;
-    }
-
-    if (method === "card") {
-      setMsg(
-        "Card checkout is ready for the store owner to connect to their chosen payment gateway."
-      );
-      return;
-    }
-
-    setMsg(
-      "M-Pesa checkout is ready for the store owner to connect to Daraja/STK Push securely."
-    );
-  };
-
-  return (
-    <section
-      id="payment"
-      className="max-w-6xl mx-auto px-5 py-14"
-    >
-      <div
-        className="
-        bg-[#1c2541] text-white
-        rounded-2xl p-6 md:p-9
-        shadow-2xl
-        "
-      >
-        <div
-          className="
-          flex items-center gap-2
-          text-[#e8a63d]
-          text-xs uppercase
-          tracking-[.2em]
-          "
-        >
-          <CreditCard size={18} />
-          Secure checkout
-        </div>
-
-        <h2 className="font-semibold text-3xl mt-3">
-          Choose how you'd like to pay
-        </h2>
-
-        <div className="grid sm:grid-cols-2 gap-3 mt-6">
-          <button
-            onClick={() => setMethod("mpesa")}
-            className={`
-              p-4 border rounded-xl text-left
-              ${
-                method === "mpesa"
-                  ? "border-[#e8a63d] bg-white/10"
-                  : "border-white/15"
-              }
-            `}
-          >
-            <b>M-Pesa</b>
-            <div className="text-xs opacity-60 mt-1">
-              STK Push / mobile payment
-            </div>
-          </button>
-
-          <button
-            onClick={() => setMethod("card")}
-            className={`
-              p-4 border rounded-xl text-left
-              ${
-                method === "card"
-                  ? "border-[#e8a63d] bg-white/10"
-                  : "border-white/15"
-              }
-            `}
-          >
-            <b>Card</b>
-            <div className="text-xs opacity-60 mt-1">
-              Visa / Mastercard gateway
-            </div>
-          </button>
-        </div>
-
-        <div className="mt-5 grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs opacity-60 block mb-2">
-              {method === "mpesa"
-                ? "M-Pesa number"
-                : "Phone number"}
-            </label>
-
-            <div className="relative">
-              <Phone
-                size={16}
-                className="
-                absolute left-3 top-1/2
-                -translate-y-1/2
-                text-[#1c2541]
-                "
-              />
-
-              <input
-                value={phone}
-                onChange={(e) =>
-                  setPhone(e.target.value)
-                }
-                placeholder="07XXXXXXXX"
-                className="
-                w-full rounded-lg
-                py-3 pl-10
-                text-[#1c2541]
-                outline-none
-                "
-              />
-            </div>
-          </div>
-
-          <div className="border border-white/15 rounded-lg p-4">
-            <div className="text-xs opacity-55">
-              Order total
-            </div>
-
-            <div className="text-2xl font-bold text-[#e8a63d]">
-              {money(total)}
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={pay}
-          disabled={!cart.length}
-          className="
-          w-full mt-5
-          bg-[#e8a63d]
-          text-[#1c2541]
-          font-bold py-4
-          rounded-xl
-          disabled:opacity-40
-          hover:bg-[#f4bf6d]
-          "
-        >
-          PAY {money(total)}
-        </button>
-
-        {msg && (
-          <div className="mt-4 p-4 bg-white/10 rounded-lg text-sm">
-            {msg}
+    <div className="group relative bg-[#F3E9DA] border border-[#1C2541]/10 flex flex-col rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <div className="relative h-64 flex items-end justify-center overflow-hidden">
+        <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        {product.was && (
+          <div className="absolute top-3 left-3 bg-[#BC5B39] text-[#F3E9DA] text-[10px] px-2 py-1" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            SAVE {formatKES(product.was - product.price)}
           </div>
         )}
-
-        <div className="flex gap-2 mt-5 text-xs opacity-60">
-          <ShieldCheck
-            size={18}
-            className="text-[#e8a63d] shrink-0"
-          />
-          Payment credentials must be kept on the secure
-          server, never inside App.jsx.
+        <div className="absolute -right-3 top-4 rotate-6 bg-[#F3E9DA] border border-[#1C2541]/20 px-3 py-2 shadow-sm">
+          <div className="text-[10px] text-[#1C2541]/60 leading-none mb-0.5">TAG №{String(product.id).padStart(3, "0")}</div>
+          <div className="text-sm font-bold text-[#1C2541] leading-none">{formatKES(product.price)}</div>
+          {product.was && <div className="text-[10px] text-[#1C2541]/50 line-through leading-none mt-0.5">{formatKES(product.was)}</div>}
         </div>
       </div>
-    </section>
+      <div className="p-4 flex flex-col gap-2 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Tag_ tone={product.grade.includes("Cream")? "marigold" : "clay"}>{product.grade}</Tag_>
+          <span className="text-[11px] uppercase tracking-wide text-[#1C2541]/50" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{product.category}</span>
+        </div>
+        <h3 className="text-lg leading-tight text-[#1C2541]" style={{ fontFamily: "'Fraunces', serif" }}>{product.name}</h3>
+        <p className="text-sm text-[#1C2541]/70 flex-1">{product.note}</p>
+        <button onClick={() => onBuy(product)} className="mt-2 flex items-center justify-center gap-2 bg-[#1C2541] text-[#F3E9DA] py-3 text-sm uppercase tracking-wide hover:bg-[#2B3654] transition-colors rounded">
+          <Phone size={15} /> Buy with MPESA - {formatKES(product.price)}
+        </button>
+      </div>
+    </div>
   );
 }
 
-/* =========================================================
-   MAIN APP
-========================================================= */
-
 export default function Duka() {
-  const [gender, setGender] = useState("All");
-  const [category, setCategory] = useState("All");
-  const [collection, setCollection] = useState("All");
-  const [search, setSearch] = useState("");
-
   const [cart, setCart] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [filter, setFilter] = useState("All");
+  const [phone, setPhone] = useState("");
+  const [paying, setPaying] = useState(false);
 
-  /* Categories automatically change based on gender */
+  const categories = useMemo(() => ["All",...new Set(PRODUCTS.map((p) => p.category))], []);
+  const visible = filter === "All"? PRODUCTS : PRODUCTS.filter((p) => p.category === filter);
 
-  const categories = useMemo(() => {
-    const list = products
-      .filter(
-        (p) =>
-          gender === "All" ||
-          p.gender === gender
-      )
-      .map((p) => p.category);
-
-    return ["All", ...new Set(list)];
-  }, [gender]);
-
-  /* Main product filtering */
-
-  const shown = useMemo(
-    () =>
-      products.filter(
-        (p) =>
-          (gender === "All" ||
-            p.gender === gender) &&
-          (category === "All" ||
-            p.category === category) &&
-          (collection === "All" ||
-            p.collection === collection) &&
-          p.name
-            .toLowerCase()
-            .includes(search.toLowerCase())
-      ),
-    [gender, category, collection, search]
-  );
-
-  const total = cart.reduce(
-    (sum, p) => sum + p.price * p.qty,
-    0
-  );
-
-  const count = cart.reduce(
-    (sum, p) => sum + p.qty,
-    0
-  );
-
-  /* Add product */
-
-  const add = (p) =>
-    setCart((current) => {
-      const found = current.find(
-        (x) => x.id === p.id
-      );
-
-      if (found) {
-        return current.map((x) =>
-          x.id === p.id
-            ? { ...x, qty: x.qty + 1 }
-            : x
-        );
+  async function buyWithMpesa(product) {
+    const userPhone = prompt("Enter Safaricom number: 2547XXXXXXXX");
+    if (!userPhone ||!userPhone.startsWith("2547")) {
+      alert("Please enter valid Safaricom number starting with 2547");
+      return;
+    }
+    setPaying(true);
+    try {
+      const res = await fetch(`/api/mpesa/stkpush?phone=${userPhone}&amount=${product.price}`);
+      const data = await res.json();
+      if(data.ResponseCode === "0"){
+        alert(`MPESA prompt sent! Enter your PIN to pay ${formatKES(product.price)}`);
+      } else {
+        alert("Payment failed: " + (data.ResponseDescription || "Try again"));
       }
+    } catch(e){
+      alert("Error connecting to MPESA. Check internet");
+    }
+    setPaying(false);
+  }
 
-      return [
-        ...current,
-        {
-          ...p,
-          qty: 1,
-        },
-      ];
-    });
+  const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const itemCount = cart.reduce((sum, i) => sum + i.qty, 0);
 
-  /* Quantity */
-
-  const qty = (id, amount) =>
-    setCart((current) =>
-      current
-        .map((x) =>
-          x.id === id
-            ? {
-                ...x,
-                qty: x.qty + amount,
-              }
-            : x
-        )
-        .filter((x) => x.qty > 0)
-    );
-
-  /* Payment scroll */
-
-  const goToPayment = () => {
-    setOpen(false);
-
-    setTimeout(() => {
-      document
-        .getElementById("payment")
-        ?.scrollIntoView({
-          behavior: "smooth",
-        });
-    }, 100);
-  };
-
-  /* WhatsApp */
-
-  const whatsapp = () => {
-    if (!cart.length) return;
-
-    const text = [
-      "Hi Duka la Style! I'd like to order:",
-      ...cart.map(
-        (x) =>
-          `• ${x.name} x${x.qty} — ${money(
-            x.price * x.qty
-          )}`
-      ),
-      "",
-      `Total: ${money(total)}`,
-    ].join("\n");
-
-    window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-        text
-      )}`,
-      "_blank"
-    );
-  };
-
-  /* Reset filters */
-
-  const chooseGender = (value) => {
-    setGender(value);
-    setCategory("All");
-    setCollection("All");
-  };
+  function checkoutOnWhatsapp() {
+    if (cart.length === 0) return;
+    const lines = cart.map((i) => `• ${i.name} x${i.qty} — ${formatKES(i.price * i.qty)}`);
+    const msg = [`Hi! I'd like to order:`,...lines, ``, `Total: ${formatKES(total)}`].join("\n");
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+  }
 
   return (
-    <div
-      className="
-      min-h-screen
-      bg-[#f3e9da]
-      text-[#2b2620]
-      "
-      style={{
-        fontFamily: "'Work Sans', sans-serif",
-      }}
-    >
-      {/* GOOGLE FONTS */}
-
+    <div className="min-h-screen bg-[#F3E9DA] text-[#2B2620]" style={{ fontFamily: "'Work Sans', sans-serif" }}>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
 
-      <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
-      />
-
-      <link
-        href="
-        https://fonts.googleapis.com/css2?
-        family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&
-        family=Work+Sans:wght@400;500;600;700
-        "
-        rel="stylesheet"
-      />
-
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
-
-      <header
-        className="
-        sticky top-0 z-50
-        bg-[#1c2541]
-        text-[#f3e9da]
-        shadow-lg
-        "
-      >
-        <div
-          className="
-          max-w-6xl mx-auto
-          px-5 py-4
-          flex items-center
-          justify-between gap-4
-          "
-        >
-          <button
-            onClick={() =>
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              })
-            }
-            className="text-left"
-          >
-            <div className="text-2xl font-semibold">
-              Duka{" "}
-              <span className="text-[#e8a63d]">
-                la Style
-              </span>
+      <header className="sticky top-0 z-30 bg-[#1C2541] text-[#F3E9DA] shadow-md">
+        <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl" style={{ fontFamily: "'Fraunces', serif" }}>Duka</span>
+              <span className="text-2xl text-[#E8A63D]" style={{ fontFamily: "'Fraunces', serif" }}>la Style</span>
             </div>
-
-            <div
-              className="
-              text-[9px]
-              uppercase
-              tracking-[.25em]
-              text-white/50
-              "
-            >
-              Curated secondhand fashion
-            </div>
-          </button>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() =>
-                document
-                  .getElementById("shop")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
-              className="
-              hidden sm:flex
-              px-4 py-2
-              text-xs
-              border border-white/20
-              rounded-lg
-              "
-            >
-              Shop
-            </button>
-
-            <button
-              onClick={() => setOpen(true)}
-              className="
-              relative flex
-              items-center gap-2
-              border border-white/20
-              px-4 py-2
-              rounded-lg
-              "
-            >
+            <p className="text-[10px] text-[#F3E9DA]/60 tracking-[0.2em]">CURATED SECONDHAND FASHION</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:flex items-center gap-1 text-xs text-[#E8A63D]"><CheckCircle size={14}/> MPESA Accepted</span>
+            <button onClick={() => setCartOpen(true)} className="relative flex items-center gap-2 border border-[#F3E9DA]/30 px-3 py-2 hover:bg-[#F3E9DA]/10 transition-colors rounded">
               <ShoppingBag size={18} />
-
-              <span className="hidden sm:inline">
-                My Bag
-              </span>
-
-              {count > 0 && (
-                <b
-                  className="
-                  absolute -top-2 -right-2
-                  w-5 h-5
-                  rounded-full
-                  bg-[#e8a63d]
-                  text-[#1c2541]
-                  text-xs
-                  flex items-center
-                  justify-center
-                  "
-                >
-                  {count}
-                </b>
-              )}
+              {itemCount > 0 && <span className="absolute -top-2 -right-2 bg-[#E8A63D] text-[#1C2541] text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">{itemCount}</span>}
             </button>
           </div>
         </div>
       </header>
 
-      {/* =====================================================
-          HERO
-      ===================================================== */}
-
-      <section className="max-w-6xl mx-auto px-5 pt-14 pb-10">
-        <div className="grid md:grid-cols-[1.2fr_.8fr] gap-9 items-center">
-          <div>
-            <div
-              className="
-              flex items-center gap-2
-              text-[#bc5b39]
-              text-xs uppercase
-              tracking-[.2em]
-              "
-            >
-              <Sparkles size={16} />
-              Fresh styles · New finds
-            </div>
-
-            <h1
-              className="
-              text-5xl sm:text-7xl
-              font-semibold
-              leading-[.92]
-              text-[#1c2541]
-              mt-5
-              "
-              style={{
-                fontFamily: "Fraunces,serif",
-              }}
-            >
-              Wear it.
-              <br />
-              <span className="text-[#bc5b39]">
-                Love it.
-              </span>
-            </h1>
-
-            <p className="max-w-lg mt-6 opacity-65 leading-relaxed">
-              Discover stylish secondhand fashion
-              for men, women and children — from
-              everyday casual looks to premium
-              statement pieces.
-            </p>
-
-            <button
-              onClick={() =>
-                document
-                  .getElementById("shop")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
-              className="
-              mt-7 inline-flex
-              items-center gap-2
-              bg-[#1c2541]
-              text-white
-              px-6 py-3.5
-              rounded-lg
-              text-sm
-              hover:bg-[#bc5b39]
-              "
-            >
-              Shop the collection
-              <ArrowRight size={16} />
-            </button>
-          </div>
-
-          <div
-            className="
-            hidden md:block
-            h-[430px]
-            rounded-2xl
-            overflow-hidden
-            shadow-xl
-            "
-          >
-            <ImageSlider
-              product={{
-                name: "Featured",
-                images: IMG.womenDresses,
-              }}
-            />
-          </div>
+      <section className="max-w-6xl mx-auto px-5 pt-14 pb-10 text-center">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <Sparkles size={16} className="text-[#BC5B39]" />
+          <span className="text-xs uppercase tracking-[0.2em] text-[#BC5B39]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Fresh bale, opened this week</span>
         </div>
+        <h1 className="text-4xl sm:text-5xl leading-[1.05] mb-4" style={{ fontFamily: "'Fraunces', serif" }}>Curated secondhand,<br/><span className="text-[#BC5B39]">styled for you.</span></h1>
+        <p className="text-[#2B2620]/70 max-w-xl mx-auto text-[15px] mb-4">Every piece hand-picked and graded — no digging through piles. Pay with MPESA, deliver in Mombasa.</p>
       </section>
 
-      {/* =====================================================
-          SHOP
-      ===================================================== */}
+      <div className="max-w-6xl mx-auto px-5 mb-8 flex gap-2 overflow-x-auto pb-2">
+        {categories.map((c) => (
+          <button key={c} onClick={() => setFilter(c)} className={`whitespace-nowrap text-xs uppercase tracking-wide px-4 py-2 border rounded transition-colors ${filter === c? "bg-[#1C2541] text-[#F3E9DA] border-[#1C2541]" : "border-[#1C2541]/20 text-[#1C2541]/70 hover:border-[#1C2541]/50"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            {c}
+          </button>
+        ))}
+      </div>
 
-      <section
-        id="shop"
-        className="max-w-6xl mx-auto px-5"
-      >
-        {/* SEARCH */}
-
-        <div className="flex flex-col md:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search
-              size={17}
-              className="
-              absolute left-3 top-1/2
-              -translate-y-1/2
-              opacity-45
-              "
-            />
-
-            <input
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search clothes..."
-              className="
-              w-full bg-white
-              border border-[#1c2541]/10
-              rounded-lg
-              py-3 pl-10 pr-4
-              outline-none
-              focus:border-[#bc5b39]
-              "
-            />
-          </div>
-
-          <div
-            className="
-            flex items-center gap-2
-            text-xs opacity-55
-            "
-          >
-            <SlidersHorizontal size={16} />
-            Filter your style
-          </div>
+      <main className="max-w-6xl mx-auto px-5 pb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {visible.map((p) => (<ProductCard key={p.id} product={p} onBuy={buyWithMpesa} />))}
         </div>
+      </main>
 
-        {/* GENDER FILTER */}
-
-        <div className="flex gap-2 overflow-x-auto pb-3">
-          {["All", "Men", "Women", "Kids"].map(
-            (item) => (
-              <button
-                key={item}
-                onClick={() =>
-                  chooseGender(item)
-                }
-                className={`
-                whitespace-nowrap
-                px-5 py-3
-                rounded-lg
-                text-xs uppercase
-                tracking-wide
-                border
-                ${
-                  gender === item
-                    ? "bg-[#1c2541] text-white border-[#1c2541]"
-                    : "border-[#1c2541]/15 bg-white/40"
-                }
-                `}
-              >
-                {item}
-              </button>
-            )
-          )}
-        </div>
-
-        {/* COLLECTION FILTER */}
-
-        <div className="flex gap-2 overflow-x-auto pb-3">
-          {[
-            "All",
-            "Premium",
-            "Casual",
-            "Formal",
-            "Elegant",
-            "Streetwear",
-          ].map((item) => (
-            <button
-              key={item}
-              onClick={() =>
-                setCollection(item)
-              }
-              className={`
-              whitespace-nowrap
-              px-5 py-2.5
-              rounded-full
-              text-[10px]
-              uppercase
-              tracking-wider
-              border
-              ${
-                collection === item
-                  ? "bg-[#bc5b39] text-white border-[#bc5b39]"
-                  : "border-[#1c2541]/15 bg-white/30"
-              }
-              `}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-
-        {/* CATEGORY FILTER */}
-
-        <div className="flex gap-2 overflow-x-auto pb-7">
-          {categories.map((item) => (
-            <button
-              key={item}
-              onClick={() =>
-                setCategory(item)
-              }
-              className={`
-              whitespace-nowrap
-              px-4 py-2
-              rounded-full
-              text-[10px]
-              uppercase
-              tracking-wider
-              border
-              ${
-                category === item
-                  ? "bg-[#bc5b39] text-white border-[#bc5b39]"
-                  : "border-[#1c2541]/15"
-              }
-              `}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-
-        {/* COLLECTION TITLE */}
-
-        <div className="flex items-end justify-between mb-5">
-          <div>
-            <div
-              className="
-              text-xs uppercase
-              tracking-widest
-              text-[#bc5b39]
-              "
-            >
-              Collection
-            </div>
-
-            <h2
-              className="
-              text-3xl
-              text-[#1c2541]
-              font-semibold
-              "
-              style={{
-                fontFamily: "Fraunces,serif",
-              }}
-            >
-              {collection !== "All"
-                ? collection
-                : category !== "All"
-                ? category
-                : gender === "All"
-                ? "All styles"
-                : `${gender}'s collection`}
-            </h2>
-          </div>
-
-          <span className="text-xs opacity-50">
-            {shown.length} pieces
-          </span>
-        </div>
-
-        {/* PRODUCTS */}
-
-        {shown.length === 0 ? (
-          <div
-            className="
-            py-20
-            text-center
-            opacity-60
-            "
-          >
-            <Search
-              size={40}
-              className="mx-auto mb-4 opacity-40"
-            />
-
-            <h3 className="text-xl">
-              No items found
-            </h3>
-
-            <p className="text-sm mt-2">
-              Try another search or category.
-            </p>
-
-            <button
-              onClick={() => {
-                setGender("All");
-                setCategory("All");
-                setCollection("All");
-                setSearch("");
-              }}
-              className="
-              mt-5
-              bg-[#1c2541]
-              text-white
-              px-5 py-2.5
-              rounded-lg
-              text-xs
-              "
-            >
-              Reset filters
-            </button>
-          </div>
-        ) : (
-          <div
-            className="
-            grid grid-cols-1
-            sm:grid-cols-2
-            lg:grid-cols-3
-            gap-5 pb-16
-            "
-          >
-            {shown.map((p) => (
-              <Card
-                key={p.id}
-                p={p}
-                onAdd={add}
-                onView={setSelected}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* =====================================================
-          PAYMENT
-      ===================================================== */}
-
-      <Payment
-        total={total}
-        cart={cart}
-      />
-
-      {/* =====================================================
-          WHATSAPP STYLING SECTION
-      ===================================================== */}
-
-      <section className="bg-[#e8ddcb]">
-        <div
-          className="
-          max-w-6xl mx-auto
-          px-5 py-14
-          flex flex-col md:flex-row
-          justify-between gap-6
-          md:items-center
-          "
-        >
-          <div>
-            <div
-              className="
-              flex items-center gap-2
-              text-[#bc5b39]
-              text-xs uppercase
-              tracking-[.2em]
-              "
-            >
-              <MessageCircle size={17} />
-              Personal styling
-            </div>
-
-            <h2
-              className="
-              text-3xl
-              text-[#1c2541]
-              mt-2
-              "
-              style={{
-                fontFamily: "Fraunces,serif",
-              }}
-            >
-              Need help choosing?
-            </h2>
-
-            <p className="text-sm opacity-60 mt-2">
-              Message us and we'll help you find
-              something within your style and budget.
-            </p>
-          </div>
-
-          <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-              "Hi Duka la Style! I'd like help choosing clothes."
-            )}`}
-            target="_blank"
-            rel="noreferrer"
-            className="
-            flex items-center gap-2
-            bg-[#1c2541]
-            text-white
-            px-6 py-3
-            rounded-lg
-            text-sm
-            hover:bg-[#bc5b39]
-            "
-          >
-            <MessageCircle size={17} />
-            Chat on WhatsApp
+      <footer className="bg-[#1C2541] text-[#F3E9DA]">
+        <div className="max-w-6xl mx-auto px-5 py-12 text-center">
+          <h2 className="text-2xl mb-2" style={{ fontFamily: "'Fraunces', serif" }}>Want a full look, not just a piece?</h2>
+          <p className="text-[#F3E9DA]/60 text-sm mb-4">Book a styling session and we'll pull pieces for your body and budget.</p>
+          <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" className="inline-flex items-center gap-2 bg-[#E8A63D] text-[#1C2541] px-6 py-3 text-sm uppercase tracking-wide font-medium hover:bg-[#f0b658] transition-colors rounded">
+            <MessageCircle size={16} /> Book on WhatsApp
           </a>
         </div>
-      </section>
-
-      {/* =====================================================
-          FOOTER
-      ===================================================== */}
-
-      <footer className="bg-[#1c2541] text-white">
-        <div
-          className="
-          max-w-6xl mx-auto
-          px-5 py-10
-          flex justify-between
-          gap-4
-          "
-        >
-          <div>
-            <div className="text-xl font-semibold">
-              Duka{" "}
-              <span className="text-[#e8a63d]">
-                la Style
-              </span>
-            </div>
-
-            <p className="text-xs text-white/40 mt-1">
-              Curated secondhand fashion.
-            </p>
-          </div>
-
-          <div className="text-xs text-white/40">
-            © {new Date().getFullYear()} Duka la Style
-          </div>
-        </div>
       </footer>
-
-      {/* =====================================================
-          PRODUCT MODAL
-      ===================================================== */}
-
-      {selected && (
-        <Modal
-          p={selected}
-          onClose={() =>
-            setSelected(null)
-          }
-          onAdd={add}
-        />
-      )}
-
-      {/* =====================================================
-          SHOPPING BAG
-      ===================================================== */}
-
-      {open && (
-        <div
-          className="
-          fixed inset-0
-          z-[70]
-          flex justify-end
-          "
-        >
-          <div
-            className="
-            absolute inset-0
-            bg-black/50
-            "
-            onClick={() =>
-              setOpen(false)
-            }
-          />
-
-          <aside
-            className="
-            relative
-            w-full max-w-md
-            bg-[#f3e9da]
-            h-full
-            flex flex-col
-            shadow-2xl
-            "
-          >
-            {/* BAG HEADER */}
-
-            <div
-              className="
-              flex justify-between
-              items-center
-              p-5
-              border-b
-              border-[#1c2541]/10
-              "
-            >
-              <div>
-                <div
-                  className="
-                  text-xs uppercase
-                  tracking-widest
-                  text-[#bc5b39]
-                  "
-                >
-                  Shopping
-                </div>
-
-                <h2 className="text-2xl text-[#1c2541]">
-                  Your Bag
-                </h2>
-              </div>
-
-              <button
-                onClick={() =>
-                  setOpen(false)
-                }
-                className="
-                w-9 h-9
-                rounded-full
-                bg-white
-                flex items-center
-                justify-center
-                "
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* BAG CONTENT */}
-
-            <div
-              className="
-              flex-1
-              overflow-y-auto
-              p-5
-              "
-            >
-              {!cart.length ? (
-                <div
-                  className="
-                  text-center
-                  py-20
-                  opacity-60
-                  "
-                >
-                  <ShoppingBag
-                    size={40}
-                    className="
-                    mx-auto
-                    text-[#bc5b39]
-                    "
-                  />
-
-                  <h3 className="text-xl mt-4">
-                    Your bag is empty
-                  </h3>
-
-                  <p className="text-sm mt-2">
-                    Find something you love
-                    and add it here.
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {cart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="
-                      flex gap-3
-                      items-center
-                      bg-white/50
-                      p-3
-                      rounded-lg
-                      "
-                    >
-                      <SafeImage
-                        images={item.images}
-                        alt={item.name}
-                        className="
-                        w-16 h-16
-                        object-cover
-                        rounded
-                        "
-                      />
-
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">
-                          {item.name}
-                        </div>
-
-                        <div className="text-xs opacity-50 mt-1">
-                          {money(item.price)}
-                        </div>
-
-                        <div
-                          className="
-                          flex items-center
-                          mt-2
-                          border
-                          border-[#1c2541]/20
-                          w-fit
-                          rounded
-                          "
-                        >
-                          <button
-                            onClick={() =>
-                              qty(item.id, -1)
-                            }
-                            className="p-1.5"
-                          >
-                            <Minus size={12} />
-                          </button>
-
-                          <span className="w-7 text-center text-xs">
-                            {item.qty}
-                          </span>
-
-                          <button
-                            onClick={() =>
-                              qty(item.id, 1)
-                            }
-                            className="p-1.5"
-                          >
-                            <Plus size={12} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="font-semibold text-sm">
-                        {money(
-                          item.price *
-                            item.qty
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* BAG FOOTER */}
-
-            <div
-              className="
-              border-t
-              border-[#1c2541]/10
-              p-5
-              "
-            >
-              <div className="flex justify-between mb-4">
-                <span className="text-sm opacity-60">
-                  Total
-                </span>
-
-                <strong className="text-xl text-[#1c2541]">
-                  {money(total)}
-                </strong>
-              </div>
-
-              <button
-                onClick={goToPayment}
-                disabled={!cart.length}
-                className="
-                w-full
-                bg-[#bc5b39]
-                text-white
-                py-3.5
-                rounded-lg
-                uppercase
-                text-sm
-                disabled:opacity-40
-                "
-              >
-                Go to Payment
-              </button>
-
-              <button
-                onClick={whatsapp}
-                disabled={!cart.length}
-                className="
-                w-full mt-2
-                bg-[#25d366]
-                text-white
-                py-3.5
-                rounded-lg
-                uppercase
-                text-sm
-                flex items-center
-                justify-center gap-2
-                disabled:opacity-40
-                "
-              >
-                <MessageCircle size={17} />
-                Order via WhatsApp
-              </button>
-            </div>
-          </aside>
-        </div>
-      )}
     </div>
   );
 }
