@@ -1,43 +1,40 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap");
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* =========================================================
-   BALEKING — PREMIUM DESIGN SYSTEM
+   BALEKING — PREMIUM GLOBAL DESIGN
+   Where Style Meets Elegance
 ========================================================= */
 
 :root {
   --bk-bg: #f7f5f1;
   --bk-surface: #ffffff;
-  --bk-surface-2: #f0eee9;
-
+  --bk-surface-soft: #f1eee8;
   --bk-text: #171717;
-  --bk-muted: #77736b;
+  --bk-muted: #77736c;
 
   --bk-primary: #111111;
-  --bk-primary-2: #252525;
+  --bk-primary-hover: #2a2a2a;
 
-  --bk-accent: #c9a45c;
-  --bk-accent-light: #e8d3a5;
+  --bk-gold: #c7a35b;
+  --bk-gold-light: #e7d2a4;
 
   --bk-border: rgba(20, 20, 20, 0.09);
 
-  --bk-radius-sm: 12px;
-  --bk-radius-md: 18px;
-  --bk-radius-lg: 26px;
-  --bk-radius-xl: 34px;
-
   --bk-shadow-sm:
-    0 5px 20px rgba(0, 0, 0, 0.05);
+    0 8px 25px rgba(0, 0, 0, 0.06);
 
-  --bk-shadow-md:
-    0 15px 45px rgba(0, 0, 0, 0.09);
+  --bk-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.09);
 
-  --bk-shadow-lg:
-    0 25px 80px rgba(0, 0, 0, 0.15);
+  --bk-shadow-xl:
+    0 30px 80px rgba(0, 0, 0, 0.14);
+
+  --bk-radius: 24px;
 }
-
-/* =========================================================
-   RESET
-========================================================= */
 
 * {
   box-sizing: border-box;
@@ -49,7 +46,22 @@ html {
 
 body {
   margin: 0;
-  padding: 0;
+  min-width: 320px;
+
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(199, 163, 91, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(0, 0, 0, 0.035),
+      transparent 25%
+    ),
+    var(--bk-bg);
+
+  color: var(--bk-text);
 
   font-family:
     "DM Sans",
@@ -58,16 +70,6 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(201, 164, 92, 0.08),
-      transparent 35%
-    ),
-    var(--bk-bg);
-
-  color: var(--bk-text);
 
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -83,22 +85,19 @@ h3,
 h4,
 h5,
 h6 {
-  letter-spacing: -0.025em;
-}
-
-h1,
-.bk-display {
   font-family:
     "Playfair Display",
     Georgia,
     serif;
+
+  letter-spacing: -0.025em;
 }
 
 button,
 input,
 textarea,
 select {
-  font-family: inherit;
+  font: inherit;
 }
 
 button {
@@ -106,16 +105,7 @@ button {
 }
 
 /* =========================================================
-   SELECTION
-========================================================= */
-
-::selection {
-  background: var(--bk-accent);
-  color: #111;
-}
-
-/* =========================================================
-   SCROLLBAR
+   PREMIUM SCROLLBAR
 ========================================================= */
 
 ::-webkit-scrollbar {
@@ -128,54 +118,122 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(20, 20, 20, 0.22);
+  background: #c8c3ba;
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(20, 20, 20, 0.38);
+  background: #9e998f;
 }
 
 /* =========================================================
-   PREMIUM HEADER
+   TEXT SELECTION
 ========================================================= */
 
-header {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.05),
-    0 8px 30px rgba(0, 0, 0, 0.035);
-
-  transition:
-    background 0.3s ease,
-    box-shadow 0.3s ease;
+::selection {
+  background: var(--bk-gold);
+  color: #111;
 }
 
 /* =========================================================
-   PREMIUM BUTTONS
+   PREMIUM BUTTON FEEL
 ========================================================= */
 
 button {
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease,
-    opacity 0.2s ease;
-}
-
-button:not(:disabled):hover {
-  transform: translateY(-1px);
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
 }
 
 button:not(:disabled):active {
-  transform: translateY(0) scale(0.98);
+  transform: scale(0.97);
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 /* =========================================================
-   PREMIUM HERO
+   INPUTS
+========================================================= */
+
+input,
+textarea,
+select {
+  border-color: var(--bk-border);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(199, 163, 91, 0.8);
+
+  box-shadow:
+    0 0 0 4px rgba(199, 163, 91, 0.12);
+
+  outline: none;
+}
+
+/* =========================================================
+   IMAGE BEHAVIOUR
+========================================================= */
+
+img {
+  max-width: 100%;
+}
+
+img {
+  transition:
+    transform 500ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    filter 500ms ease;
+}
+
+/* Product image hover */
+
+article:hover img {
+  transform: scale(1.045);
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+header {
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.04),
+    0 8px 30px rgba(0, 0, 0, 0.025);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* =========================================================
+   BALEKING BRAND
+========================================================= */
+
+header button:first-child div:first-child {
+  font-family:
+    "Playfair Display",
+    Georgia,
+    serif;
+
+  letter-spacing: -0.04em;
+}
+
+header button:first-child div:last-child {
+  letter-spacing: 0.12em;
+}
+
+/* =========================================================
+   HERO SECTION
 ========================================================= */
 
 section.bg-slate-900 {
@@ -184,29 +242,32 @@ section.bg-slate-900 {
 
   background:
     radial-gradient(
-      circle at 80% 20%,
-      rgba(201, 164, 92, 0.18),
-      transparent 30%
+      circle at 85% 20%,
+      rgba(199, 163, 91, 0.25),
+      transparent 28%
     ),
     radial-gradient(
-      circle at 20% 80%,
+      circle at 15% 85%,
       rgba(255, 255, 255, 0.06),
-      transparent 35%
+      transparent 30%
     ),
     linear-gradient(
       135deg,
-      #090909 0%,
+      #080808 0%,
       #151515 45%,
-      #0c0c0c 100%
-    ) !important;
+      #080808 100%
+    );
 }
+
+/* Hero decorative glow */
 
 section.bg-slate-900::before {
   content: "";
+
   position: absolute;
 
-  width: 420px;
-  height: 420px;
+  width: 450px;
+  height: 450px;
 
   right: -180px;
   top: -180px;
@@ -216,8 +277,8 @@ section.bg-slate-900::before {
   background:
     radial-gradient(
       circle,
-      rgba(201, 164, 92, 0.22),
-      transparent 65%
+      rgba(199, 163, 91, 0.18),
+      transparent 68%
     );
 
   pointer-events: none;
@@ -228,154 +289,114 @@ section.bg-slate-900::after {
 
   position: absolute;
 
-  inset: 0;
+  width: 300px;
+  height: 300px;
 
-  background-image:
-    linear-gradient(
-      rgba(255, 255, 255, 0.018) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.018) 1px,
-      transparent 1px
-    );
+  left: -150px;
+  bottom: -160px;
 
-  background-size: 40px 40px;
+  border-radius: 50%;
 
-  mask-image:
-    linear-gradient(
-      to bottom,
-      black,
-      transparent
-    );
+  border: 1px solid rgba(255, 255, 255, 0.06);
 
   pointer-events: none;
 }
 
-section.bg-slate-900 > div {
-  position: relative;
-  z-index: 2;
-}
-
-/* =========================================================
-   HERO LABEL
-========================================================= */
-
-section.bg-slate-900 p {
-  letter-spacing: 0.3em;
-}
-
-/* =========================================================
-   HERO HEADING
-========================================================= */
+/* Hero title */
 
 section.bg-slate-900 h1 {
+  position: relative;
+  z-index: 2;
+
   font-family:
     "Playfair Display",
     Georgia,
     serif;
 
-  background:
-    linear-gradient(
-      120deg,
-      #ffffff 10%,
-      #f2dfb2 50%,
-      #ffffff 90%
-    );
+  font-weight: 800;
 
-  -webkit-background-clip: text;
-  background-clip: text;
+  letter-spacing: -0.045em;
 
-  -webkit-text-fill-color: transparent;
-
-  text-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.25);
+  text-wrap: balance;
 }
 
-/* =========================================================
-   SHOP NOW BUTTON
-========================================================= */
+/* Hero description */
+
+section.bg-slate-900 p {
+  position: relative;
+  z-index: 2;
+}
+
+/* Hero CTA */
 
 section.bg-slate-900 button {
   position: relative;
-  overflow: hidden;
+  z-index: 2;
 
   box-shadow:
-    0 12px 35px rgba(0, 0, 0, 0.2);
+    0 12px 30px rgba(0, 0, 0, 0.25);
 }
 
-section.bg-slate-900 button::after {
-  content: "";
+section.bg-slate-900 button:hover {
+  transform: translateY(-3px);
 
-  position: absolute;
-
-  top: 0;
-  left: -120%;
-
-  width: 70%;
-  height: 100%;
-
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.65),
-      transparent
-    );
-
-  transform: skewX(-20deg);
-
-  transition: left 0.6s ease;
-}
-
-section.bg-slate-900 button:hover::after {
-  left: 140%;
-}
-
-/* =========================================================
-   PRODUCT AREA
-========================================================= */
-
-#products {
-  position: relative;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.32);
 }
 
 /* =========================================================
    CATEGORY PILLS
 ========================================================= */
 
-#products .rounded-full {
-  border: 1px solid var(--bk-border);
+main button.rounded-full {
+  border: 1px solid transparent;
 
   transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background 0.25s ease;
+    transform 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 
-#products .rounded-full:hover {
+main button.rounded-full:hover {
   transform: translateY(-2px);
 
   box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.08);
+    0 8px 20px rgba(0, 0, 0, 0.07);
+}
+
+main button.rounded-full.bg-slate-900 {
+  background:
+    linear-gradient(
+      135deg,
+      #111111,
+      #292929
+    );
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.14);
 }
 
 /* =========================================================
    SEARCH BOX
 ========================================================= */
 
-#products input {
-  font-size: 0.95rem;
-}
-
-#products input::placeholder {
-  color: #aaa69f;
-}
-
-#products .max-w-md {
+main .max-w-md {
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.045);
+    0 8px 25px rgba(0, 0, 0, 0.035);
+
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+main .max-w-md:focus-within {
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.08),
+    0 0 0 3px rgba(199, 163, 91, 0.08);
+
+  transform: translateY(-1px);
 }
 
 /* =========================================================
@@ -389,121 +410,98 @@ article {
     1px solid rgba(0, 0, 0, 0.045);
 
   box-shadow:
-    0 8px 35px rgba(0, 0, 0, 0.045);
+    0 8px 25px rgba(0, 0, 0, 0.045);
 
   transition:
-    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.35s ease,
-    border-color 0.35s ease;
+    transform 300ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 300ms ease,
+    border-color 300ms ease;
 }
 
 article:hover {
-  transform:
-    translateY(-7px);
+  transform: translateY(-7px);
 
   border-color:
-    rgba(201, 164, 92, 0.25);
+    rgba(199, 163, 91, 0.25);
 
   box-shadow:
-    0 22px 60px rgba(0, 0, 0, 0.12);
+    0 25px 55px rgba(0, 0, 0, 0.11);
 }
 
-/* =========================================================
-   PRODUCT IMAGE
-========================================================= */
+/* Product image container */
 
 article .aspect-\[4\/5\] {
   position: relative;
+  overflow: hidden;
 }
 
-article img {
-  transition:
-    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
-    filter 0.4s ease;
-}
-
-article:hover img {
-  transform: scale(1.055);
-}
-
-/* Image luxury overlay */
+/* Image overlay */
 
 article .aspect-\[4\/5\]::after {
   content: "";
 
   position: absolute;
-
   inset: 0;
 
   background:
     linear-gradient(
-      to bottom,
-      transparent 55%,
-      rgba(0, 0, 0, 0.12)
+      to top,
+      rgba(0, 0, 0, 0.12),
+      transparent 35%
     );
-
-  opacity: 0;
-
-  transition: opacity 0.35s ease;
 
   pointer-events: none;
 }
 
-article:hover .aspect-\[4\/5\]::after {
-  opacity: 1;
-}
+/* SALE badge */
 
-/* =========================================================
-   SALE BADGE
-========================================================= */
+article .absolute.left-3.top-3 {
+  z-index: 4;
 
-article .absolute.left-3 {
   background:
     linear-gradient(
       135deg,
-      #ffffff,
-      #f2e5c7
-    ) !important;
+      #f4dfad,
+      #c7a35b
+    );
 
-  color: #171717;
-
-  border:
-    1px solid rgba(201, 164, 92, 0.35);
+  color: #17120a;
 
   box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.1);
+    0 6px 18px rgba(0, 0, 0, 0.15);
 }
 
-/* =========================================================
-   ADD BUTTON
-========================================================= */
+/* SOLD OUT */
+
+article .absolute.inset-0 {
+  z-index: 5;
+
+  backdrop-filter: blur(2px);
+}
+
+/* Add button */
 
 article button {
   background:
     linear-gradient(
       135deg,
       #111111,
-      #2b2b2b
-    ) !important;
+      #2a2a2a
+    );
 
   box-shadow:
-    0 7px 20px rgba(0, 0, 0, 0.15);
+    0 6px 15px rgba(0, 0, 0, 0.12);
 }
 
-article button:hover {
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.22);
+article button:hover:not(:disabled) {
+  transform: translateY(-2px);
 
-  background:
-    linear-gradient(
-      135deg,
-      #1b1b1b,
-      #3b3b3b
-    ) !important;
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.18);
 }
 
 /* =========================================================
-   PRICE
+   PRODUCT PRICE
 ========================================================= */
 
 article .font-black {
@@ -519,20 +517,8 @@ section.border-t.bg-white {
     linear-gradient(
       180deg,
       #ffffff 0%,
-      #f8f6f1 100%
-    ) !important;
-}
-
-/* =========================================================
-   DASHBOARD CARDS
-========================================================= */
-
-section.border-t.bg-white .bg-slate-50 {
-  border:
-    1px solid rgba(0, 0, 0, 0.045);
-
-  box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.035);
+      #f7f5f1 100%
+    );
 }
 
 /* =========================================================
@@ -544,59 +530,89 @@ table {
   border-spacing: 0;
 }
 
-thead {
-  background:
-    linear-gradient(
-      90deg,
-      #f4f1ea,
-      #faf9f7
-    );
+table thead {
+  background: #ece9e2;
 }
 
-th {
+table th {
   font-size: 0.72rem;
+
+  letter-spacing: 0.09em;
 
   text-transform: uppercase;
 
-  letter-spacing: 0.08em;
-
-  color: #77736b;
+  color: #77736c;
 }
 
-tbody tr {
+table tbody tr {
   transition:
-    background 0.2s ease;
+    background-color 180ms ease;
 }
 
-tbody tr:hover {
-  background: rgba(201, 164, 92, 0.06);
+table tbody tr:hover {
+  background: rgba(199, 163, 91, 0.055);
 }
 
 /* =========================================================
    MODALS
 ========================================================= */
 
+.fixed.inset-0.z-\[80\],
 .fixed.inset-0.z-\[90\] {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 }
 
+/* Modal surfaces */
+
+.fixed.inset-0.z-\[80\] aside,
 .fixed.inset-0.z-\[90\] > div {
   box-shadow:
-    0 30px 100px rgba(0, 0, 0, 0.25);
-
-  border:
-    1px solid rgba(255, 255, 255, 0.7);
-
-  animation:
-    bkModalIn 0.28s ease both;
+    0 35px 100px rgba(0, 0, 0, 0.22);
 }
 
-@keyframes bkModalIn {
+/* =========================================================
+   CART
+========================================================= */
+
+aside {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #fbfaf8
+    );
+}
+
+aside .border {
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+aside .border:hover {
+  border-color:
+    rgba(199, 163, 91, 0.3);
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* =========================================================
+   CHECKOUT
+========================================================= */
+
+.fixed.inset-0.z-\[90\] .rounded-3xl {
+  animation:
+    premiumModalIn
+    300ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes premiumModalIn {
   from {
     opacity: 0;
     transform:
-      translateY(12px)
+      translateY(18px)
       scale(0.97);
   }
 
@@ -609,61 +625,7 @@ tbody tr:hover {
 }
 
 /* =========================================================
-   INPUTS
-========================================================= */
-
-input,
-textarea,
-select {
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color:
-    rgba(201, 164, 92, 0.75) !important;
-
-  box-shadow:
-    0 0 0 4px
-    rgba(201, 164, 92, 0.11);
-}
-
-/* =========================================================
-   CART DRAWER
-========================================================= */
-
-.fixed.inset-0.z-\[80\] aside {
-  box-shadow:
-    -25px 0 80px rgba(0, 0, 0, 0.2);
-
-  animation:
-    bkCartIn 0.3s ease both;
-}
-
-@keyframes bkCartIn {
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
-}
-
-/* =========================================================
-   CHECKOUT
-========================================================= */
-
-.fixed.inset-0.z-\[90\] .rounded-3xl {
-  scrollbar-width: thin;
-}
-
-/* =========================================================
-   PAYMENT CARD
+   PAYMENT BOX
 ========================================================= */
 
 .bg-slate-100 {
@@ -671,16 +633,49 @@ select:focus {
     linear-gradient(
       135deg,
       #f3f0e9,
-      #faf9f6
-    ) !important;
+      #ebe7df
+    );
+}
+
+/* M-Pesa number */
+
+.text-2xl.font-black {
+  letter-spacing: 0.03em;
 }
 
 /* =========================================================
-   M-PESA NUMBER
+   PREMIUM PRIMARY BUTTONS
 ========================================================= */
 
-.text-2xl.font-black {
-  letter-spacing: 0.04em;
+.bg-slate-900 {
+  background:
+    linear-gradient(
+      135deg,
+      #0d0d0d 0%,
+      #242424 100%
+    );
+}
+
+.bg-slate-900:hover {
+  background:
+    linear-gradient(
+      135deg,
+      #181818 0%,
+      #333333 100%
+    );
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #f3f0e9
+    );
 }
 
 /* =========================================================
@@ -691,21 +686,22 @@ select:focus {
   background:
     linear-gradient(
       135deg,
-      #111111,
-      #252525
+      #101010,
+      #292929
     ) !important;
 
   border:
-    1px solid rgba(201, 164, 92, 0.3);
+    1px solid rgba(255, 255, 255, 0.08);
 
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.25);
+    0 20px 50px rgba(0, 0, 0, 0.22);
 
   animation:
-    bkToast 0.3s ease both;
+    toastIn
+    350ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-@keyframes bkToast {
+@keyframes toastIn {
   from {
     opacity: 0;
     transform:
@@ -722,108 +718,71 @@ select:focus {
 }
 
 /* =========================================================
-   FOOTER
+   REFERRAL PROGRAM
 ========================================================= */
 
-footer {
-  background:
-    linear-gradient(
-      180deg,
-      #ffffff,
-      #f4f1ea
-    ) !important;
+.bg-green-100 {
+  background: #e7f5eb !important;
 }
 
-/* =========================================================
-   PREMIUM GOLD ACCENTS
-========================================================= */
-
-.bk-gold {
-  color: var(--bk-accent);
+.text-green-700 {
+  color: #23753a !important;
 }
 
-.bk-gold-bg {
+.text-green-600 {
+  color: #267a3d !important;
+}
+
+/* Referral progress */
+
+.bg-slate-900.h-full {
   background:
     linear-gradient(
-      135deg,
-      #c9a45c,
-      #e6cf9d
+      90deg,
+      #111111,
+      #c7a35b
     );
 }
 
 /* =========================================================
-   UTILITY — GLASS
+   ICONS
 ========================================================= */
 
-.bk-glass {
-  background:
-    rgba(255, 255, 255, 0.7);
-
-  backdrop-filter:
-    blur(18px);
-
-  -webkit-backdrop-filter:
-    blur(18px);
-
-  border:
-    1px solid rgba(255, 255, 255, 0.7);
-
-  box-shadow:
-    0 15px 50px rgba(0, 0, 0, 0.08);
+svg {
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* =========================================================
-   UTILITY — PREMIUM CARD
+   LOADING
 ========================================================= */
 
-.bk-premium-card {
-  border:
-    1px solid rgba(201, 164, 92, 0.12);
-
-  border-radius:
-    var(--bk-radius-lg);
-
-  background:
-    rgba(255, 255, 255, 0.9);
-
-  box-shadow:
-    var(--bk-shadow-md);
-
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.bk-premium-card:hover {
-  transform:
-    translateY(-5px);
-
-  box-shadow:
-    var(--bk-shadow-lg);
+.animate-spin {
+  animation-duration: 900ms;
 }
 
 /* =========================================================
-   MOBILE
+   MOBILE EXPERIENCE
 ========================================================= */
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+
   body {
     overflow-x: hidden;
   }
 
   section.bg-slate-900 {
-    min-height: 540px;
-    display: flex;
-    align-items: center;
+    padding-top: 4.5rem;
+    padding-bottom: 4.5rem;
   }
 
   section.bg-slate-900 h1 {
-    font-size: 2.8rem;
-    line-height: 1.05;
+    font-size: 2.7rem;
+    line-height: 1.03;
   }
 
-  #products {
-    padding-top: 2.5rem;
+  article {
+    border-radius: 20px;
   }
 
   article:hover {
@@ -831,30 +790,78 @@ footer {
   }
 
   article .p-4 {
-    padding: 0.9rem;
+    padding: 0.85rem;
+  }
+
+  article h3 {
+    font-size: 0.95rem;
+  }
+
+  article p {
+    font-size: 0.76rem;
+  }
+
+  article .font-black {
+    font-size: 0.95rem;
+  }
+
+  /* Prevent mobile horizontal overflow */
+
+  main {
+    overflow-x: hidden;
+  }
+
+  /* Better modal spacing */
+
+  .fixed.inset-0.z-\[90\] {
+    padding: 0.75rem;
+  }
+
+  /* Cart */
+
+  aside {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
 /* =========================================================
-   SMALL PHONES
+   TABLET
 ========================================================= */
 
-@media (max-width: 420px) {
+@media (min-width: 768px) and (max-width: 1100px) {
+
   section.bg-slate-900 h1 {
-    font-size: 2.35rem;
+    font-size: 4.5rem;
+  }
+}
+
+/* =========================================================
+   LARGE DESKTOP
+========================================================= */
+
+@media (min-width: 1280px) {
+
+  section.bg-slate-900 {
+    padding-top: 7rem;
+    padding-bottom: 7rem;
   }
 
-  article h3 {
-    font-size: 0.9rem;
+  article {
+    border-radius: 28px;
   }
+}
 
-  article p {
-    font-size: 0.75rem;
-  }
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
 
-  article .font-black {
-    font-size: 0.9rem;
-  }
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(199, 163, 91, 0.45);
+  outline-offset: 2px;
 }
 
 /* =========================================================
@@ -862,12 +869,15 @@ footer {
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
+
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+
     transition-duration: 0.01ms !important;
   }
 }
