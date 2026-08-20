@@ -3,7 +3,7 @@ import {
   ShoppingBag, Search, X, Plus, Minus, Trash2, Edit3, LogIn, LogOut,
   Package, CreditCard, CheckCircle, RefreshCw, Upload, Menu, User, Phone,
   Copy, Gift, Sparkles, ChevronRight, Palette, MessageCircle, Heart,
-  Crown, Shirt, Baby, BriefcaseBusiness, Tags, Star, SlidersHorizontal
+  Crown, Shirt, Baby, BriefcaseBusiness, Tags, Star, SlidersHorizontal, Eye, EyeOff
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
@@ -116,6 +116,7 @@ function App() {
 
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("");
+  const [showOwnerPassword, setShowOwnerPassword] = useState(false);
   const [ownerLoggedIn, setOwnerLoggedIn] = useState(false);
   const [ownerLoading, setOwnerLoading] = useState(false);
 
@@ -530,6 +531,7 @@ function App() {
     } else {
       setOwnerEmail("");
       setOwnerPassword("");
+      setShowOwnerPassword(false);
       setOwnerOpen(false);
       setMessage("Owner login successful.");
     }
