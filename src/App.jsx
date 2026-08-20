@@ -1,30 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ShoppingBag,
-  Search,
-  X,
-  Plus,
-  Minus,
-  Trash2,
-  Edit3,
-  LogIn,
-  LogOut,
-  Package,
-  CreditCard,
-  MessageCircle,
-  CheckCircle,
-  RefreshCw,
-  Upload,
-  Menu,
-  User,
-  Phone,
-  Copy,
-  Gift,
+  ShoppingBag, Search, X, Plus, Minus, Trash2, Edit3, LogIn, LogOut,
+  Package, CreditCard, CheckCircle, RefreshCw, Upload, Menu, User, Phone,
+  Copy, Gift, Sparkles, ChevronRight, Palette, MessageCircle, Heart,
+  Crown, Shirt, Baby, BriefcaseBusiness, Tags, Star, SlidersHorizontal
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
 /* =========================================================
-   STORE SETTINGS
+   BALEKING — PREMIUM STORE
+   Existing Supabase tables expected:
+   products, orders, order_items, referral_codes, referral_events
+   Storage bucket expected: product-images
 ========================================================= */
 
 const WHATSAPP_NUMBER = "254710574821";
@@ -38,7 +25,7 @@ const EMPTY_PRODUCT = {
   description: "",
   price: "",
   old_price: "",
-  category: "Trousers",
+  category: "Tops",
   style: "Casual",
   gender: "Unisex",
   age_group: "Adult",
@@ -46,58 +33,83 @@ const EMPTY_PRODUCT = {
   image_url: "",
 };
 
-const CATEGORIES = [
-  "All",
-  "Tops",
-  "Trousers",
-  "Dresses",
-  "Skirts",
-  "Shorts",
-  "Shoes",
-  "Jackets",
-  "Kids",
-  "Accessories",
+const PRODUCT_CATEGORIES = [
+  "Tops", "Trousers", "Dresses", "Skirts", "Shorts",
+  "Shoes", "Jackets", "Kids", "Accessories"
 ];
+
+const THEMES = {
+  midnight: {
+    name: "Midnight Luxe",
+    accent: "#c9a86a",
+    accentSoft: "#f4ead8",
+    hero: "from-[#08090d] via-[#151821] to-[#252018]",
+    button: "bg-[#c9a86a] text-[#111]",
+    label: "Gold & Obsidian",
+  },
+  royal: {
+    name: "Royal Velvet",
+    accent: "#8b5cf6",
+    accentSoft: "#eee7ff",
+    hero: "from-[#0d0717] via-[#24103f] to-[#13091e]",
+    button: "bg-[#8b5cf6] text-white",
+    label: "Purple & Black",
+  },
+  pearl: {
+    name: "Pearl Atelier",
+    accent: "#8a6b4b",
+    accentSoft: "#f2e8dc",
+    hero: "from-[#f7f2ea] via-[#efe4d4] to-[#d8c4ad]",
+    button: "bg-[#201a16] text-white",
+    label: "Warm Pearl",
+  },
+  emerald: {
+    name: "Emerald Society",
+    accent: "#0f9f75",
+    accentSoft: "#dff8ef",
+    hero: "from-[#03130f] via-[#063d30] to-[#071b17]",
+    button: "bg-[#0f9f75] text-white",
+    label: "Emerald & Onyx",
+  },
+};
 
 function money(value) {
   return `KSh ${Number(value || 0).toLocaleString()}`;
 }
 
 function makeReferralCode(name) {
-  const clean = name
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 8);
-
-  const random = Math.floor(1000 + Math.random() * 9000);
-
-  return `${clean || "BALEKING"}${random}`;
+  const clean = name.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+  return `${clean || "BALEKING"}${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
 function App() {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
-
   const [referralCodes, setReferralCodes] = useState([]);
-  const [referralEvents, setReferralEvents] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   const [search, setSearch] = useState("");
+  const [genderFilter, setGenderFilter] = useState("All");
+  const [ageFilter, setAgeFilter] = useState("All");
+  const [styleFilter, setStyleFilter] = useState("All");
   const [category, setCategory] = useState("All");
+
+  const [themeKey, setThemeKey] = useState(() => {
+    return localStorage.getItem("baleking-theme") || "midnight";
+  });
 
   const [cartOpen, setCartOpen] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-
+  const [themeOpen, setThemeOpen] = useState(false);
   const [customerOpen, setCustomerOpen] = useState(false);
+
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [mpesaReceipt, setMpesaReceipt] = useState("");
-
   const [referralCodeInput, setReferralCodeInput] = useState("");
   const [referralInfo, setReferralInfo] = useState(null);
   const [checkingReferral, setCheckingReferral] = useState(false);
@@ -110,19 +122,25 @@ function App() {
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
-
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const [newReferralName, setNewReferralName] = useState("");
   const [creatingReferral, setCreatingReferral] = useState(false);
 
-  /* =========================================================
-     LOAD PRODUCTS
-  ========================================================= */
+  const theme = THEMES[themeKey];
+
+  useEffect(() => {
+    localStorage.setItem("baleking-theme", themeKey);
+  }, [themeKey]);
+
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => setMessage(""), 4500);
+    return () => clearTimeout(timer);
+  }, [message]);
 
   async function loadProducts() {
     setLoading(true);
-
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -134,73 +152,33 @@ function App() {
     } else {
       setProducts(data || []);
     }
-
     setLoading(false);
   }
-
-  /* =========================================================
-     LOAD ORDERS
-  ========================================================= */
 
   async function loadOrders() {
     const { data, error } = await supabase
       .from("orders")
-      .select(`
-        *,
-        order_items (*)
-      `)
+      .select("*, order_items (*)")
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error(error);
-      setMessage("Could not load orders.");
-      return;
-    }
-
-    setOrders(data || []);
+    if (!error) setOrders(data || []);
+    else console.error(error);
   }
 
-  /* =========================================================
-     LOAD REFERRALS
-  ========================================================= */
-
   async function loadReferralData() {
-    const { data: codes, error: codesError } = await supabase
+    const { data, error } = await supabase
       .from("referral_codes")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (codesError) {
-      console.error(codesError);
-      return;
-    }
-
-    setReferralCodes(codes || []);
-
-    const { data: events, error: eventsError } = await supabase
-      .from("referral_events")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (eventsError) {
-      console.error(eventsError);
-      return;
-    }
-
-    setReferralEvents(events || []);
+    if (!error) setReferralCodes(data || []);
   }
-
-  /* =========================================================
-     AUTH
-  ========================================================= */
 
   async function checkOwner() {
     const { data } = await supabase.auth.getSession();
-
     if (data.session) {
       setOwnerLoggedIn(true);
-      await loadOrders();
-      await loadReferralData();
+      await Promise.all([loadOrders(), loadReferralData()]);
     }
   }
 
@@ -208,160 +186,145 @@ function App() {
     loadProducts();
     checkOwner();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const loggedIn = !!session;
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        const loggedIn = !!session;
+        setOwnerLoggedIn(loggedIn);
 
-      setOwnerLoggedIn(loggedIn);
-
-      if (loggedIn) {
-        await loadOrders();
-        await loadReferralData();
-      } else {
-        setOrders([]);
-        setReferralCodes([]);
-        setReferralEvents([]);
+        if (loggedIn) {
+          await Promise.all([loadOrders(), loadReferralData()]);
+        } else {
+          setOrders([]);
+          setReferralCodes([]);
+        }
       }
-    });
+    );
 
-    return () => subscription.unsubscribe();
+    return () => listener.subscription.unsubscribe();
   }, []);
-
-  /* =========================================================
-     FILTER PRODUCTS
-  ========================================================= */
 
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
 
     return products.filter((product) => {
-      const matchesCategory =
-        category === "All" ||
-        product.category?.toLowerCase() === category.toLowerCase() ||
-        product.gender?.toLowerCase() === category.toLowerCase() ||
-        product.age_group?.toLowerCase() === category.toLowerCase();
-
       const matchesSearch =
         !term ||
-        product.name?.toLowerCase().includes(term) ||
-        product.description?.toLowerCase().includes(term) ||
-        product.category?.toLowerCase().includes(term) ||
-        product.gender?.toLowerCase().includes(term);
+        [product.name, product.description, product.category, product.gender,
+         product.age_group, product.style]
+          .some((v) => String(v || "").toLowerCase().includes(term));
 
-      return matchesCategory && matchesSearch;
+      const matchesGender =
+        genderFilter === "All" ||
+        String(product.gender || "").toLowerCase() === genderFilter.toLowerCase();
+
+      const matchesAge =
+        ageFilter === "All" ||
+        String(product.age_group || "").toLowerCase() === ageFilter.toLowerCase();
+
+      const matchesStyle =
+        styleFilter === "All" ||
+        String(product.style || "").toLowerCase() === styleFilter.toLowerCase();
+
+      const matchesCategory =
+        category === "All" ||
+        String(product.category || "").toLowerCase() === category.toLowerCase();
+
+      return matchesSearch && matchesGender && matchesAge && matchesStyle && matchesCategory;
     });
-  }, [products, category, search]);
+  }, [products, search, genderFilter, ageFilter, styleFilter, category]);
 
-  /* =========================================================
-     CART
-  ========================================================= */
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartSubtotal = cart.reduce(
+    (sum, item) => sum + Number(item.price || 0) * item.quantity, 0
+  );
+
+  const referralDiscount =
+    referralInfo?.qualifies
+      ? Number((cartSubtotal * (REFERRAL_DISCOUNT_PERCENT / 100)).toFixed(2))
+      : 0;
+
+  const finalTotal = Math.max(0, cartSubtotal - referralDiscount);
+
+  function chooseGender(value) {
+    setGenderFilter(value);
+    setAgeFilter("All");
+    setCategory("All");
+    document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function chooseStyle(value) {
+    setStyleFilter(value);
+    setGenderFilter("All");
+    setCategory("All");
+    document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function resetFilters() {
+    setGenderFilter("All");
+    setAgeFilter("All");
+    setStyleFilter("All");
+    setCategory("All");
+    setSearch("");
+  }
 
   function addToCart(product) {
     if (Number(product.stock) <= 0) {
-      setMessage("This product is out of stock.");
+      setMessage("This item is currently sold out.");
       return;
     }
 
     setCart((current) => {
       const existing = current.find((item) => item.id === product.id);
-
       if (existing) {
         if (existing.quantity >= Number(product.stock)) {
-          setMessage("You cannot add more than the available stock.");
+          setMessage("You've reached the available stock.");
           return current;
         }
-
         return current.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-
       return [...current, { ...product, quantity: 1 }];
     });
 
     setCartOpen(true);
   }
 
-  function increaseCart(productId) {
+  function increaseCart(id) {
     setCart((current) =>
       current.map((item) => {
-        if (item.id !== productId) return item;
-
+        if (item.id !== id) return item;
         if (item.quantity >= Number(item.stock)) {
           setMessage("Maximum available stock reached.");
           return item;
         }
-
-        return {
-          ...item,
-          quantity: item.quantity + 1,
-        };
+        return { ...item, quantity: item.quantity + 1 };
       })
     );
   }
 
-  function decreaseCart(productId) {
+  function decreaseCart(id) {
     setCart((current) =>
       current
-        .map((item) =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity - 1 }
-            : item
-        )
+        .map((item) => item.id === id ? { ...item, quantity: item.quantity - 1 } : item)
         .filter((item) => item.quantity > 0)
     );
   }
 
-  function removeFromCart(productId) {
-    setCart((current) =>
-      current.filter((item) => item.id !== productId)
-    );
+  function removeFromCart(id) {
+    setCart((current) => current.filter((item) => item.id !== id));
   }
-
-  const cartCount = cart.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
-
-  const cartSubtotal = cart.reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
-    0
-  );
-
-  const referralDiscount =
-    referralInfo?.qualifies === true
-      ? Number(
-          (
-            cartSubtotal *
-            (REFERRAL_DISCOUNT_PERCENT / 100)
-          ).toFixed(2)
-        )
-      : 0;
-
-  const finalTotal = Math.max(
-    0,
-    cartSubtotal - referralDiscount
-  );
-
-  /* =========================================================
-     CHECKOUT
-  ========================================================= */
 
   function openCheckout() {
     if (!cart.length) {
       setMessage("Your cart is empty.");
       return;
     }
-
     setCustomerOpen(true);
   }
 
   async function checkReferralCode() {
     const code = referralCodeInput.trim().toUpperCase();
-
     if (!code) {
       setReferralInfo(null);
       setMessage("Enter a referral code first.");
@@ -379,139 +342,77 @@ function App() {
         .maybeSingle();
 
       if (error) throw error;
-
-      if (!referral) {
-        setReferralInfo(null);
-        setMessage("Invalid or inactive referral code.");
-        return;
-      }
+      if (!referral) throw new Error("Invalid or inactive referral code.");
 
       const { count, error: countError } = await supabase
         .from("referral_events")
-        .select("*", {
-          count: "exact",
-          head: true,
-        })
+        .select("*", { count: "exact", head: true })
         .eq("referral_code", referral.code);
 
       if (countError) throw countError;
 
       const successfulReferrals = Number(count || 0);
+      const qualifies = successfulReferrals >= REFERRAL_THRESHOLD;
 
-      const qualifies =
-        successfulReferrals >= REFERRAL_THRESHOLD;
+      setReferralInfo({ ...referral, successfulReferrals, qualifies });
 
-      setReferralInfo({
-        ...referral,
-        successfulReferrals,
-        qualifies,
-      });
-
-      if (qualifies) {
-        setMessage(
-          `Referral verified! You receive ${REFERRAL_DISCOUNT_PERCENT}% off.`
-        );
-      } else {
-        setMessage(
-          `Referral code accepted. ${Math.max(
-            0,
-            REFERRAL_THRESHOLD - successfulReferrals
-          )} more successful referral(s) needed for the discount.`
-        );
-      }
+      setMessage(
+        qualifies
+          ? `${REFERRAL_DISCOUNT_PERCENT}% referral discount applied.`
+          : `Code accepted. ${Math.max(0, REFERRAL_THRESHOLD - successfulReferrals)} more successful referral(s) needed.`
+      );
     } catch (error) {
       console.error(error);
       setReferralInfo(null);
-      setMessage("Could not verify referral code.");
+      setMessage(error.message || "Could not verify referral code.");
     } finally {
       setCheckingReferral(false);
     }
   }
 
   async function placeOrder() {
-    if (!customerName.trim()) {
-      setMessage("Please enter your name.");
-      return;
-    }
-
-    if (!customerPhone.trim()) {
-      setMessage("Please enter your phone number.");
-      return;
-    }
-
-    if (!mpesaReceipt.trim()) {
-      setMessage("Please enter your M-Pesa receipt number.");
-      return;
-    }
-
-    if (!cart.length) {
-      setMessage("Your cart is empty.");
-      return;
-    }
+    if (!customerName.trim()) return setMessage("Please enter your name.");
+    if (!customerPhone.trim()) return setMessage("Please enter your phone number.");
+    if (!mpesaReceipt.trim()) return setMessage("Please enter your M-Pesa receipt.");
+    if (!cart.length) return setMessage("Your cart is empty.");
 
     setOwnerLoading(true);
 
     try {
-      /*
-       * Re-check referral before creating the order.
-       * This prevents an old/stale referral calculation.
-       */
-
       let verifiedReferral = null;
       let verifiedDiscount = 0;
 
       if (referralCodeInput.trim()) {
         const code = referralCodeInput.trim().toUpperCase();
 
-        const { data: referral, error: referralError } =
-          await supabase
-            .from("referral_codes")
-            .select("*")
-            .eq("code", code)
-            .eq("active", true)
-            .maybeSingle();
+        const { data: referral, error } = await supabase
+          .from("referral_codes")
+          .select("*")
+          .eq("code", code)
+          .eq("active", true)
+          .maybeSingle();
 
-        if (referralError) throw referralError;
-
-        if (!referral) {
-          throw new Error("The referral code is invalid.");
-        }
+        if (error) throw error;
+        if (!referral) throw new Error("The referral code is invalid.");
 
         const { count, error: countError } = await supabase
           .from("referral_events")
-          .select("*", {
-            count: "exact",
-            head: true,
-          })
+          .select("*", { count: "exact", head: true })
           .eq("referral_code", referral.code);
 
         if (countError) throw countError;
 
-        const successfulReferrals = Number(count || 0);
-
-        const qualifies =
-          successfulReferrals >= REFERRAL_THRESHOLD;
-
+        const qualifies = Number(count || 0) >= REFERRAL_THRESHOLD;
         verifiedReferral = referral;
 
         if (qualifies) {
           verifiedDiscount = Number(
-            (
-              cartSubtotal *
-              (REFERRAL_DISCOUNT_PERCENT / 100)
-            ).toFixed(2)
+            (cartSubtotal * REFERRAL_DISCOUNT_PERCENT / 100).toFixed(2)
           );
         }
       }
 
-      const orderTotal = Math.max(
-        0,
-        cartSubtotal - verifiedDiscount
-      );
-
-      /* =====================================================
-         CREATE ORDER
-      ===================================================== */
+      const orderTotal = Math.max(0, cartSubtotal - verifiedDiscount);
 
       const { data: order, error: orderError } = await supabase
         .from("orders")
@@ -522,23 +423,14 @@ function App() {
           payment_status: "pending",
           order_status: "new",
           mpesa_receipt: mpesaReceipt.trim(),
-
-          referred_by:
-            verifiedReferral?.owner_name || null,
-
-          referral_code:
-            verifiedReferral?.code || null,
-
+          referred_by: verifiedReferral?.owner_name || null,
+          referral_code: verifiedReferral?.code || null,
           referral_discount: verifiedDiscount,
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
-
-      /* =====================================================
-         CREATE ORDER ITEMS
-      ===================================================== */
 
       const items = cart.map((item) => ({
         order_id: order.id,
@@ -554,51 +446,26 @@ function App() {
 
       if (itemError) throw itemError;
 
-      /* =====================================================
-         RECORD REFERRAL
-      ===================================================== */
-
       if (verifiedReferral) {
-        const { error: referralEventError } =
-          await supabase
-            .from("referral_events")
-            .insert({
-              referrer_name: verifiedReferral.owner_name,
-              referred_customer_name: customerName.trim(),
-              referred_customer_phone: customerPhone.trim(),
-              order_id: order.id,
-              referral_code: verifiedReferral.code,
-              discount_awarded: verifiedDiscount,
-            });
-
-        if (referralEventError) {
-          console.error(referralEventError);
-        }
-
-        /*
-         * Update referral statistics.
-         */
-        const newReferralCount =
-          Number(verifiedReferral.total_referrals || 0) + 1;
-
-        const newDiscountTotal =
-          Number(
-            verifiedReferral.total_discount_awarded || 0
-          ) + verifiedDiscount;
+        await supabase.from("referral_events").insert({
+          referrer_name: verifiedReferral.owner_name,
+          referred_customer_name: customerName.trim(),
+          referred_customer_phone: customerPhone.trim(),
+          order_id: order.id,
+          referral_code: verifiedReferral.code,
+          discount_awarded: verifiedDiscount,
+        });
 
         await supabase
           .from("referral_codes")
           .update({
-            total_referrals: newReferralCount,
-            total_discount_awarded: newDiscountTotal,
+            total_referrals: Number(verifiedReferral.total_referrals || 0) + 1,
+            total_discount_awarded:
+              Number(verifiedReferral.total_discount_awarded || 0) + verifiedDiscount,
             updated_at: new Date().toISOString(),
           })
           .eq("id", verifiedReferral.id);
       }
-
-      /* =====================================================
-         WHATSAPP
-      ===================================================== */
 
       const whatsappMessage = [
         "Hello Baleking 👋",
@@ -609,65 +476,41 @@ function App() {
         "",
         "ORDER:",
         ...cart.map(
-          (item) =>
-            `${item.name} x${item.quantity} = ${money(
-              Number(item.price) * item.quantity
-            )}`
+          (item) => `${item.name} x${item.quantity} = ${money(Number(item.price) * item.quantity)}`
         ),
         "",
         `SUBTOTAL: ${money(cartSubtotal)}`,
-        verifiedDiscount > 0
-          ? `REFERRAL DISCOUNT: -${money(verifiedDiscount)}`
-          : "REFERRAL DISCOUNT: KSh 0",
+        `REFERRAL DISCOUNT: ${verifiedDiscount ? "-" + money(verifiedDiscount) : "KSh 0"}`,
         `TOTAL TO PAY: ${money(orderTotal)}`,
-        "",
         `M-Pesa Receipt: ${mpesaReceipt.trim()}`,
-        verifiedReferral
-          ? `Referral Code: ${verifiedReferral.code}`
-          : "Referral Code: None",
+        verifiedReferral ? `Referral Code: ${verifiedReferral.code}` : "Referral Code: None",
         "",
         "Please confirm my order.",
       ].join("\n");
 
       const whatsappUrl =
-        `https://wa.me/${WHATSAPP_NUMBER}` +
-        `?text=${encodeURIComponent(whatsappMessage)}`;
+        `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
 
       setCart([]);
-      setCustomerOpen(false);
       setCartOpen(false);
-
+      setCustomerOpen(false);
       setCustomerName("");
       setCustomerPhone("");
       setMpesaReceipt("");
-
       setReferralCodeInput("");
       setReferralInfo(null);
 
-      setMessage(
-        "Order placed successfully! Opening WhatsApp..."
-      );
-
+      setMessage("Order placed successfully. Opening WhatsApp...");
       window.open(whatsappUrl, "_blank");
 
-      if (ownerLoggedIn) {
-        await loadOrders();
-        await loadReferralData();
-      }
+      if (ownerLoggedIn) await Promise.all([loadOrders(), loadReferralData()]);
     } catch (error) {
       console.error(error);
-
-      setMessage(
-        error.message || "Could not place the order."
-      );
+      setMessage(error.message || "Could not place the order.");
     } finally {
       setOwnerLoading(false);
     }
   }
-
-  /* =========================================================
-     OWNER LOGIN
-  ========================================================= */
 
   async function ownerLogin() {
     if (!ownerEmail || !ownerPassword) {
@@ -677,19 +520,18 @@ function App() {
 
     setOwnerLoading(true);
 
-    const { error } =
-      await supabase.auth.signInWithPassword({
-        email: ownerEmail,
-        password: ownerPassword,
-      });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: ownerEmail,
+      password: ownerPassword,
+    });
 
     if (error) {
       setMessage(error.message);
     } else {
-      setMessage("Owner login successful.");
       setOwnerEmail("");
       setOwnerPassword("");
       setOwnerOpen(false);
+      setMessage("Owner login successful.");
     }
 
     setOwnerLoading(false);
@@ -697,16 +539,10 @@ function App() {
 
   async function ownerLogout() {
     await supabase.auth.signOut();
-
     setOwnerLoggedIn(false);
     setOrders([]);
     setReferralCodes([]);
-    setReferralEvents([]);
   }
-
-  /* =========================================================
-     PRODUCT FORM
-  ========================================================= */
 
   function openAddProduct() {
     setEditingProduct(null);
@@ -716,131 +552,81 @@ function App() {
 
   function openEditProduct(product) {
     setEditingProduct(product);
-
     setProductForm({
       name: product.name || "",
       description: product.description || "",
       price: product.price ?? "",
       old_price: product.old_price ?? "",
-      category: product.category || "Trousers",
+      category: product.category || "Tops",
       style: product.style || "Casual",
       gender: product.gender || "Unisex",
       age_group: product.age_group || "Adult",
       stock: product.stock ?? "",
       image_url: product.image_url || "",
     });
-
     setProductFormOpen(true);
   }
 
   function updateProductForm(field, value) {
-    setProductForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
+    setProductForm((current) => ({ ...current, [field]: value }));
   }
-
-  /* =========================================================
-     IMAGE UPLOAD
-  ========================================================= */
 
   async function uploadImage(event) {
     const file = event.target.files?.[0];
-
     if (!file) return;
-
-    if (!ownerLoggedIn) {
-      setMessage("You must be logged in as the owner.");
-      return;
-    }
-
-    setUploadingImage(true);
-
-    try {
-      const extension =
-        file.name.split(".").pop()?.toLowerCase() || "jpg";
-
-      const fileName =
-        `${crypto.randomUUID()}.${extension}`;
-
-      const filePath = `products/${fileName}`;
-
-      const { error: uploadError } =
-        await supabase.storage
-          .from("product-images")
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-      if (uploadError) throw uploadError;
-
-      const { data } =
-        supabase.storage
-          .from("product-images")
-          .getPublicUrl(filePath);
-
-      updateProductForm(
-        "image_url",
-        data.publicUrl
-      );
-
-      setMessage("Image uploaded successfully.");
-    } catch (error) {
-      console.error(error);
-
-      setMessage(
-        error.message ||
-          "Image upload failed. Make sure the product-images bucket exists."
-      );
-    } finally {
-      setUploadingImage(false);
-    }
-  }
-
-  /* =========================================================
-     SAVE PRODUCT
-  ========================================================= */
-
-  async function saveProduct(event) {
-    event.preventDefault();
 
     if (!ownerLoggedIn) {
       setMessage("Owner login required.");
       return;
     }
 
-    if (!productForm.name.trim()) {
-      setMessage("Product name is required.");
-      return;
-    }
+    setUploadingImage(true);
 
-    if (!productForm.price) {
-      setMessage("Product price is required.");
-      return;
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const filePath = `products/${crypto.randomUUID()}.${extension}`;
+
+      const { error } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(filePath);
+
+      updateProductForm("image_url", data.publicUrl);
+      setMessage("Image uploaded.");
+    } catch (error) {
+      console.error(error);
+      setMessage(error.message || "Image upload failed.");
+    } finally {
+      setUploadingImage(false);
     }
+  }
+
+  async function saveProduct(event) {
+    event.preventDefault();
+
+    if (!ownerLoggedIn) return setMessage("Owner login required.");
+    if (!productForm.name.trim()) return setMessage("Product name is required.");
+    if (!productForm.price) return setMessage("Product price is required.");
 
     const payload = {
       name: productForm.name.trim(),
-      description:
-        productForm.description.trim() || null,
-
+      description: productForm.description.trim() || null,
       price: Number(productForm.price),
-
-      old_price: productForm.old_price
-        ? Number(productForm.old_price)
-        : null,
-
+      old_price: productForm.old_price ? Number(productForm.old_price) : null,
       category: productForm.category,
       style: productForm.style,
       gender: productForm.gender,
       age_group: productForm.age_group,
-
       stock: Number(productForm.stock || 0),
-
-      image_url:
-        productForm.image_url || null,
-
+      image_url: productForm.image_url || null,
       updated_at: new Date().toISOString(),
     };
 
@@ -848,101 +634,55 @@ function App() {
 
     try {
       if (editingProduct) {
-        const { error } =
-          await supabase
-            .from("products")
-            .update(payload)
-            .eq("id", editingProduct.id);
-
+        const { error } = await supabase
+          .from("products")
+          .update(payload)
+          .eq("id", editingProduct.id);
         if (error) throw error;
-
-        setMessage("Product updated successfully.");
+        setMessage("Product updated.");
       } else {
-        const { error } =
-          await supabase
-            .from("products")
-            .insert(payload);
-
+        const { error } = await supabase.from("products").insert(payload);
         if (error) throw error;
-
-        setMessage("Product added successfully.");
+        setMessage("Product added.");
       }
 
       setProductFormOpen(false);
       setEditingProduct(null);
       setProductForm(EMPTY_PRODUCT);
-
       await loadProducts();
     } catch (error) {
       console.error(error);
-
-      setMessage(
-        error.message ||
-          "Could not save product."
-      );
+      setMessage(error.message || "Could not save product.");
     } finally {
       setOwnerLoading(false);
     }
   }
 
-  /* =========================================================
-     DELETE PRODUCT
-  ========================================================= */
-
   async function deleteProduct(product) {
-    const confirmed = window.confirm(
-      `Delete "${product.name}"?`
-    );
+    if (!window.confirm(`Delete "${product.name}"?`)) return;
 
-    if (!confirmed) return;
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", product.id);
 
-    const { error } =
-      await supabase
-        .from("products")
-        .delete()
-        .eq("id", product.id);
-
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
+    if (error) return setMessage(error.message);
 
     setMessage("Product deleted.");
-
     await loadProducts();
   }
 
-  /* =========================================================
-     UPDATE ORDER
-  ========================================================= */
+  async function updateOrder(orderId, field, value) {
+    const { error } = await supabase
+      .from("orders")
+      .update({ [field]: value, updated_at: new Date().toISOString() })
+      .eq("id", orderId);
 
-  async function updateOrder(
-    orderId,
-    field,
-    value
-  ) {
-    const { error } =
-      await supabase
-        .from("orders")
-        .update({
-          [field]: value,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", orderId);
-
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
+    if (error) return setMessage(error.message);
 
     setMessage("Order updated.");
-
     await loadOrders();
   }
-
-  /* =========================================================
-     CREATE REFERRAL CODE
-  ========================================================= */
 
   async function createReferralCode() {
     if (!newReferralName.trim()) {
@@ -953,69 +693,44 @@ function App() {
     setCreatingReferral(true);
 
     try {
-      const code = makeReferralCode(
-        newReferralName
-      );
-
-      const { data, error } =
-        await supabase
-          .from("referral_codes")
-          .insert({
-            code,
-            owner_name:
-              newReferralName.trim(),
-            total_referrals: 0,
-            total_discount_awarded: 0,
-            active: true,
-          })
-          .select()
-          .single();
+      const { data, error } = await supabase
+        .from("referral_codes")
+        .insert({
+          code: makeReferralCode(newReferralName),
+          owner_name: newReferralName.trim(),
+          total_referrals: 0,
+          total_discount_awarded: 0,
+          active: true,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      setReferralCodes((current) => [
-        data,
-        ...current,
-      ]);
-
+      setReferralCodes((current) => [data, ...current]);
       setNewReferralName("");
-
-      setMessage(
-        `Referral code ${code} created successfully.`
-      );
+      setMessage(`Referral code ${data.code} created.`);
     } catch (error) {
       console.error(error);
-
-      setMessage(
-        error.message ||
-          "Could not create referral code."
-      );
+      setMessage(error.message || "Could not create referral code.");
     } finally {
       setCreatingReferral(false);
     }
   }
 
   async function toggleReferralCode(referral) {
-    const { error } =
-      await supabase
-        .from("referral_codes")
-        .update({
-          active: !referral.active,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", referral.id);
+    const { error } = await supabase
+      .from("referral_codes")
+      .update({
+        active: !referral.active,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", referral.id);
 
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
+    if (error) return setMessage(error.message);
 
     await loadReferralData();
-    setMessage(
-      referral.active
-        ? "Referral code deactivated."
-        : "Referral code activated."
-    );
+    setMessage(referral.active ? "Referral deactivated." : "Referral activated.");
   }
 
   async function copyReferralCode(code) {
@@ -1023,1710 +738,859 @@ function App() {
       await navigator.clipboard.writeText(code);
       setMessage("Referral code copied.");
     } catch {
-      setMessage(
-        `Referral code: ${code}`
-      );
+      setMessage(`Referral code: ${code}`);
     }
   }
 
-  /* =========================================================
-     UI
-  ========================================================= */
+  const activeFilter =
+    genderFilter !== "All" || ageFilter !== "All" ||
+    styleFilter !== "All" || category !== "All" || search;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#f7f6f3] text-[#161616]">
+      {/* TOP ANNOUNCEMENT */}
+      <div
+        className="px-4 py-2 text-center text-[11px] font-black uppercase tracking-[0.2em]"
+        style={{ background: theme.accent, color: themeKey === "pearl" ? "#fff" : "#111" }}
+      >
+        Complimentary style. Elevated everyday.
+      </div>
 
       {/* HEADER */}
-
-      <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-black/5 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-
           <button
-            onClick={() => {
-              setCategory("All");
-              setSearch("");
-            }}
-            className="text-left"
+            onClick={resetFilters}
+            className="group flex items-center gap-3 text-left"
           >
-            <div className="text-2xl font-black tracking-tight">
-              Baleking
+            <div
+              className="flex h-11 w-11 items-center justify-center rounded-2xl shadow-lg"
+              style={{ background: theme.accent }}
+            >
+              <Crown size={21} />
             </div>
-
-            <div className="text-xs font-medium text-slate-500">
-              Where Style Meets Elegance
+            <div>
+              <div className="text-xl font-black tracking-[-0.04em]">BALEKING</div>
+              <div className="text-[9px] font-bold uppercase tracking-[0.24em] text-black/45">
+                Where style meets elegance
+              </div>
             </div>
           </button>
 
-          <div className="hidden items-center gap-3 md:flex">
+          <nav className="hidden items-center gap-2 lg:flex">
+            {[
+              ["Male", "gender", Shirt],
+              ["Female", "gender", Sparkles],
+              ["Children", "age", Baby],
+              ["Casual", "style", Tags],
+              ["Official", "style", BriefcaseBusiness],
+              ["Streetwear", "style", Shirt],
+            ].map(([label, type, Icon]) => (
+              <button
+                key={label}
+                onClick={() =>
+                  type === "gender"
+                    ? chooseGender(label === "Male" ? "Male" : "Female")
+                    : type === "age"
+                    ? setAgeFilter("Children")
+                    : chooseStyle(label === "Official" ? "Formal" : label)
+                }
+                className="rounded-full px-4 py-2 text-xs font-black transition hover:bg-black hover:text-white"
+              >
+                <Icon size={14} className="mr-1 inline" />
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setThemeOpen(true)}
+              className="hidden rounded-full border border-black/10 p-3 sm:block"
+              title="Change theme"
+            >
+              <Palette size={17} />
+            </button>
 
             <button
               onClick={() => setOwnerOpen(true)}
-              className="rounded-xl px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+              className="hidden rounded-full border border-black/10 px-4 py-2 text-xs font-black md:block"
             >
               Owner
             </button>
 
             <button
               onClick={() => setCartOpen(true)}
-              className="relative rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white"
+              className="relative rounded-full px-4 py-3 text-xs font-black text-white shadow-lg"
+              style={{ background: "#111" }}
             >
-              <ShoppingBag
-                size={17}
-                className="mr-2 inline"
-              />
-
+              <ShoppingBag size={16} className="mr-1 inline" />
               Cart
-
               {cartCount > 0 && (
-                <span className="ml-2 rounded-full bg-white px-2 py-0.5 text-xs text-slate-900">
+                <span
+                  className="ml-1 rounded-full px-2 py-0.5"
+                  style={{ background: theme.accent, color: "#111" }}
+                >
                   {cartCount}
                 </span>
               )}
             </button>
 
+            <button
+              onClick={() => setMobileMenu((v) => !v)}
+              className="rounded-full border border-black/10 p-3 lg:hidden"
+            >
+              <Menu size={18} />
+            </button>
           </div>
-
-          <button
-            className="md:hidden"
-            onClick={() =>
-              setMobileMenu(!mobileMenu)
-            }
-          >
-            <Menu />
-          </button>
-
         </div>
 
         {mobileMenu && (
-          <div className="border-t bg-white px-4 py-3 md:hidden">
-
-            <div className="flex gap-2">
-
+          <div className="border-t border-black/5 bg-white p-4 lg:hidden">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                ["Male", () => chooseGender("Male")],
+                ["Female", () => chooseGender("Female")],
+                ["Children", () => setAgeFilter("Children")],
+                ["Casual", () => chooseStyle("Casual")],
+                ["Official", () => chooseStyle("Formal")],
+                ["Streetwear", () => chooseStyle("Streetwear")],
+              ].map(([label, fn]) => (
+                <button
+                  key={label}
+                  onClick={() => { fn(); setMobileMenu(false); }}
+                  className="rounded-2xl border border-black/10 px-4 py-3 text-left text-sm font-black"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <button
-                onClick={() => {
-                  setOwnerOpen(true);
-                  setMobileMenu(false);
-                }}
-                className="flex-1 rounded-xl border px-4 py-3 font-semibold"
+                onClick={() => { setThemeOpen(true); setMobileMenu(false); }}
+                className="rounded-2xl bg-black px-4 py-3 text-sm font-black text-white"
+              >
+                <Palette size={16} className="mr-2 inline" />
+                Themes
+              </button>
+              <button
+                onClick={() => { setOwnerOpen(true); setMobileMenu(false); }}
+                className="rounded-2xl border px-4 py-3 text-sm font-black"
               >
                 Owner
               </button>
-
-              <button
-                onClick={() => {
-                  setCartOpen(true);
-                  setMobileMenu(false);
-                }}
-                className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white"
-              >
-                Cart ({cartCount})
-              </button>
-
             </div>
-
           </div>
         )}
       </header>
 
-      {/* MESSAGE */}
-
+      {/* TOAST */}
       {message && (
-        <div className="fixed bottom-5 left-1/2 z-[100] flex max-w-[90%] -translate-x-1/2 items-center gap-3 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-xl">
-
-          <CheckCircle size={18} />
-
+        <div className="fixed bottom-5 left-1/2 z-[200] flex max-w-[92%] -translate-x-1/2 items-center gap-3 rounded-2xl bg-[#111] px-5 py-3 text-sm font-bold text-white shadow-2xl">
+          <CheckCircle size={18} style={{ color: theme.accent }} />
           <span>{message}</span>
-
-          <button
-            onClick={() => setMessage("")}
-            className="ml-2"
-          >
-            <X size={17} />
-          </button>
-
+          <button onClick={() => setMessage("")}><X size={16} /></button>
         </div>
       )}
 
       {/* HERO */}
+      <section className={`relative overflow-hidden bg-gradient-to-br ${theme.hero} text-white`}>
+        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full border border-white/10" />
+        <div className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full border border-white/10" />
 
-      <section className="bg-slate-900 px-4 py-16 text-white">
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-20 md:grid-cols-[1.1fr_.9fr] md:items-center md:py-28">
+          <div>
+            <div
+              className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.25em]"
+            >
+              <Sparkles size={13} />
+              {theme.name}
+            </div>
 
-        <div className="mx-auto max-w-7xl">
-
-          <div className="max-w-2xl">
-
-            <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-slate-300">
-              Baleking
-            </p>
-
-            <h1 className="text-4xl font-black leading-tight sm:text-6xl">
-              Find your next favourite style.
+            <h1 className="max-w-3xl text-5xl font-black leading-[.94] tracking-[-0.055em] sm:text-7xl">
+              Style that makes an entrance.
             </h1>
 
-            <p className="mt-5 max-w-xl text-slate-300">
-              Shop quality fashion for men, women and children.
-              Browse our latest collection and order directly.
+            <p className="mt-6 max-w-xl text-base leading-7 text-white/65 sm:text-lg">
+              Discover curated fashion for men, women and children —
+              from effortless casual pieces to polished official looks
+              and statement streetwear.
             </p>
 
-            <button
-              onClick={() =>
-                document
-                  .getElementById("products")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
-              className="mt-7 rounded-2xl bg-white px-6 py-3 font-bold text-slate-900"
-            >
-              Shop now
-            </button>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button
+                onClick={() => document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" })}
+                className="rounded-full px-7 py-4 text-sm font-black shadow-xl transition hover:-translate-y-1"
+                style={{ background: theme.accent, color: "#111" }}
+              >
+                Explore collection <ChevronRight size={17} className="ml-1 inline" />
+              </button>
+              <button
+                onClick={() => setThemeOpen(true)}
+                className="rounded-full border border-white/20 bg-white/5 px-7 py-4 text-sm font-black backdrop-blur"
+              >
+                <Palette size={16} className="mr-2 inline" />
+                Change atmosphere
+              </button>
+            </div>
 
+            <div className="mt-10 flex flex-wrap gap-6 text-xs font-bold text-white/50">
+              <span>✓ Curated styles</span>
+              <span>✓ M-Pesa checkout</span>
+              <span>✓ WhatsApp ordering</span>
+            </div>
           </div>
 
+          <div className="relative hidden md:block">
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur">
+              <div className="grid aspect-[4/5] grid-cols-2 gap-3 overflow-hidden rounded-[1.5rem]">
+                {products.slice(0, 4).map((product) => (
+                  <div key={product.id} className="relative overflow-hidden bg-white/10">
+                    {product.image_url ? (
+                      <img src={product.image_url} alt="" className="h-full w-full object-cover transition duration-700 hover:scale-105" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-white/20">
+                        <Shirt size={55} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {products.length === 0 && (
+                  <div className="col-span-2 flex items-center justify-center text-center text-white/40">
+                    <div>
+                      <Crown size={45} className="mx-auto mb-3" />
+                      <div className="font-black">Your collection starts here.</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div
+              className="absolute -bottom-5 -left-5 rounded-2xl px-5 py-4 shadow-2xl"
+              style={{ background: theme.accent, color: "#111" }}
+            >
+              <div className="text-[9px] font-black uppercase tracking-[.2em]">The Baleking edit</div>
+              <div className="mt-1 text-lg font-black">Dress your moment.</div>
+            </div>
+          </div>
         </div>
-
       </section>
 
-      {/* PRODUCTS */}
-
-      <main
-        id="products"
-        className="mx-auto max-w-7xl px-4 py-10"
-      >
-
-        <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
+      {/* STYLE / AUDIENCE HUB */}
+      <section className="mx-auto max-w-7xl px-4 py-12">
+        <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-black">
-              Our Collection
-            </h2>
-
-            <p className="text-sm text-slate-500">
-              {filteredProducts.length} products available
-            </p>
+            <div className="text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>
+              Shop your way
+            </div>
+            <h2 className="mt-2 text-3xl font-black tracking-tight">Find your world.</h2>
           </div>
-
-          <div className="flex w-full max-w-md items-center rounded-2xl border bg-white px-4">
-
-            <Search
-              size={19}
-              className="text-slate-400"
-            />
-
-            <input
-              value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-              placeholder="Search clothes..."
-              className="w-full bg-transparent px-3 py-3 outline-none"
-            />
-
-          </div>
-
+          <button onClick={resetFilters} className="hidden rounded-full border px-4 py-2 text-xs font-black sm:block">
+            View everything
+          </button>
         </div>
 
-        <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
-
-          {CATEGORIES.map((item) => (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            { title: "For Him", sub: "Sharp. Refined. Effortless.", action: () => chooseGender("Male"), icon: Shirt },
+            { title: "For Her", sub: "Elegant. Confident. Expressive.", action: () => chooseGender("Female"), icon: Sparkles },
+            { title: "For Kids", sub: "Playful. Comfortable. Cool.", action: () => { setAgeFilter("Children"); setGenderFilter("All"); setStyleFilter("All"); setCategory("All"); document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" }); }, icon: Baby },
+          ].map(({ title, sub, action, icon: Icon }) => (
             <button
-              key={item}
-              onClick={() =>
-                setCategory(item)
-              }
-              className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold ${
-                category === item
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-600 shadow-sm"
-              }`}
+              key={title}
+              onClick={action}
+              className="group relative overflow-hidden rounded-[2rem] bg-[#171717] p-7 text-left text-white shadow-xl transition hover:-translate-y-1"
             >
-              {item}
+              <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full border border-white/10" />
+              <Icon size={27} style={{ color: theme.accent }} />
+              <div className="mt-10 text-2xl font-black">{title}</div>
+              <div className="mt-1 text-sm text-white/50">{sub}</div>
+              <div className="mt-6 text-xs font-black uppercase tracking-wider" style={{ color: theme.accent }}>
+                Shop now <ChevronRight size={14} className="ml-1 inline transition group-hover:translate-x-1" />
+              </div>
             </button>
           ))}
-
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <RefreshCw
-              className="animate-spin"
-              size={30}
-            />
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          {[
+            ["Casual", "Relaxed everyday essentials", "Casual"],
+            ["Official", "Polished looks for important moments", "Formal"],
+            ["Streetwear", "Bold energy. Modern attitude.", "Streetwear"],
+          ].map(([title, sub, value]) => (
+            <button
+              key={title}
+              onClick={() => chooseStyle(value)}
+              className="rounded-[2rem] border border-black/5 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-xl font-black">{title}</div>
+                <ChevronRight size={18} />
+              </div>
+              <div className="mt-2 text-sm text-black/45">{sub}</div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* COLLECTION */}
+      <main id="collection" className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="rounded-[2rem] bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>
+                The collection
+              </div>
+              <h2 className="mt-2 text-3xl font-black tracking-tight">Pieces worth coming back for.</h2>
+              <p className="mt-1 text-sm text-black/45">{filteredProducts.length} pieces available right now.</p>
+            </div>
+
+            <div className="flex w-full max-w-lg items-center rounded-2xl border border-black/10 bg-[#fafafa] px-4">
+              <Search size={18} className="text-black/35" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search styles, pieces, categories..."
+                className="w-full bg-transparent px-3 py-3.5 text-sm outline-none"
+              />
+            </div>
           </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="rounded-3xl bg-white p-12 text-center shadow-sm">
 
-            <Package
-              size={45}
-              className="mx-auto mb-4 text-slate-300"
-            />
-
-            <h3 className="text-xl font-bold">
-              No products found
-            </h3>
-
-            <p className="mt-2 text-slate-500">
-              Try another category or search term.
-            </p>
-
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-
-            {filteredProducts.map((product) => (
-
-              <article
-                key={product.id}
-                className="overflow-hidden rounded-3xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["All", ...PRODUCT_CATEGORIES].map((item) => (
+              <button
+                key={item}
+                onClick={() => setCategory(item)}
+                className="rounded-full px-4 py-2 text-xs font-black transition"
+                style={
+                  category === item
+                    ? { background: "#111", color: "#fff" }
+                    : { background: "#f4f3f0", color: "#555" }
+                }
               >
-
-                <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
-
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-slate-300">
-                      <Package size={45} />
-                    </div>
-                  )}
-
-                  {Number(product.stock) <= 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-
-                      <span className="rounded-full bg-white px-4 py-2 text-sm font-black">
-                        SOLD OUT
-                      </span>
-
-                    </div>
-                  )}
-
-                  {product.old_price &&
-                    Number(product.old_price) >
-                      Number(product.price) && (
-                    <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-xs font-black">
-                      SALE
-                    </span>
-                  )}
-
-                </div>
-
-                <div className="p-4">
-
-                  <div className="mb-1 text-xs font-bold uppercase text-slate-400">
-                    {product.gender} · {product.age_group}
-                  </div>
-
-                  <h3 className="truncate font-black">
-                    {product.name}
-                  </h3>
-
-                  <p className="mt-1 line-clamp-2 min-h-[40px] text-sm text-slate-500">
-                    {product.description ||
-                      "Quality fashion from Baleking."}
-                  </p>
-
-                  <div className="mt-3 flex items-end justify-between gap-2">
-
-                    <div>
-
-                      <div className="font-black">
-                        {money(product.price)}
-                      </div>
-
-                      {product.old_price &&
-                        Number(product.old_price) >
-                          Number(product.price) && (
-                        <div className="text-xs text-slate-400 line-through">
-                          {money(product.old_price)}
-                        </div>
-                      )}
-
-                    </div>
-
-                    <button
-                      disabled={
-                        Number(product.stock) <= 0
-                      }
-                      onClick={() =>
-                        addToCart(product)
-                      }
-                      className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Add
-                    </button>
-
-                  </div>
-
-                  <div className="mt-3 text-xs font-semibold text-slate-400">
-                    {Number(product.stock) > 0
-                      ? `${product.stock} in stock`
-                      : "Out of stock"}
-                  </div>
-
-                </div>
-
-              </article>
-
+                {item}
+              </button>
             ))}
-
           </div>
-        )}
 
+          <div className="mt-3 flex flex-wrap gap-2">
+            {["All", "Male", "Female", "Unisex"].map((item) => (
+              <button
+                key={item}
+                onClick={() => setGenderFilter(item)}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-black"
+                style={genderFilter === item ? { borderColor: theme.accent, background: theme.accentSoft } : {}}
+              >
+                {item}
+              </button>
+            ))}
+            {["All", "Adult", "Teen", "Children", "Baby"].map((item) => (
+              <button
+                key={item}
+                onClick={() => setAgeFilter(item)}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-black"
+                style={ageFilter === item ? { borderColor: theme.accent, background: theme.accentSoft } : {}}
+              >
+                {item}
+              </button>
+            ))}
+            {["All", "Casual", "Formal", "Streetwear", "Sport", "Traditional", "Smart Casual"].map((item) => (
+              <button
+                key={item}
+                onClick={() => setStyleFilter(item)}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-black"
+                style={styleFilter === item ? { borderColor: theme.accent, background: theme.accentSoft } : {}}
+              >
+                {item === "Formal" ? "Official" : item}
+              </button>
+            ))}
+            {activeFilter && (
+              <button onClick={resetFilters} className="rounded-full bg-black px-3 py-1.5 text-[11px] font-black text-white">
+                <SlidersHorizontal size={12} className="mr-1 inline" /> Clear filters
+              </button>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-24">
+              <RefreshCw className="animate-spin" size={30} />
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="py-24 text-center">
+              <Package size={50} className="mx-auto mb-4 text-black/10" />
+              <h3 className="text-xl font-black">Nothing here yet.</h3>
+              <p className="mt-2 text-sm text-black/40">Try another filter or check back for new drops.</p>
+              <button onClick={resetFilters} className="mt-5 rounded-full bg-black px-5 py-3 text-xs font-black text-white">
+                Show all products
+              </button>
+            </div>
+          ) : (
+            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {filteredProducts.map((product) => (
+                <article
+                  key={product.id}
+                  className="group overflow-hidden rounded-[1.5rem] border border-black/5 bg-[#fafafa] transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden bg-[#e9e7e2]">
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-black/10">
+                        <Shirt size={55} />
+                      </div>
+                    )}
+
+                    {product.old_price && Number(product.old_price) > Number(product.price) && (
+                      <span
+                        className="absolute left-3 top-3 rounded-full px-3 py-1 text-[9px] font-black uppercase"
+                        style={{ background: theme.accent, color: "#111" }}
+                      >
+                        Private sale
+                      </span>
+                    )}
+
+                    {Number(product.stock) <= 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/45">
+                        <span className="rounded-full bg-white px-4 py-2 text-xs font-black">SOLD OUT</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4">
+                    <div className="text-[9px] font-black uppercase tracking-wider text-black/35">
+                      {product.gender || "Unisex"} · {product.age_group || "Adult"}
+                    </div>
+                    <h3 className="mt-1 truncate text-sm font-black">{product.name}</h3>
+                    <p className="mt-1 line-clamp-2 min-h-[34px] text-[11px] leading-5 text-black/40">
+                      {product.description || "Quality fashion from Baleking."}
+                    </p>
+
+                    <div className="mt-4 flex items-end justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-black">{money(product.price)}</div>
+                        {product.old_price && Number(product.old_price) > Number(product.price) && (
+                          <div className="text-[10px] text-black/30 line-through">{money(product.old_price)}</div>
+                        )}
+                      </div>
+                      <button
+                        disabled={Number(product.stock) <= 0}
+                        onClick={() => addToCart(product)}
+                        className="rounded-xl px-3 py-2 text-[10px] font-black transition hover:scale-105 disabled:opacity-30"
+                        style={{ background: "#111", color: "#fff" }}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* OWNER DASHBOARD */}
-
       {ownerLoggedIn && (
-        <section className="border-t bg-white px-4 py-12">
-
+        <section className="border-t bg-white px-4 py-16">
           <div className="mx-auto max-w-7xl">
-
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-
-                <p className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                  Owner Dashboard
-                </p>
-
-                <h2 className="text-3xl font-black">
-                  Manage Store
-                </h2>
-
+                <div className="text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>
+                  Private area
+                </div>
+                <h2 className="mt-2 text-3xl font-black">Baleking Command Center</h2>
+                <p className="mt-1 text-sm text-black/40">Manage products, orders, referrals and your store atmosphere.</p>
               </div>
-
-              <div className="flex gap-2">
-
-                <button
-                  onClick={openAddProduct}
-                  className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white"
-                >
-                  <Plus
-                    size={17}
-                    className="mr-1 inline"
-                  />
-                  Add Product
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => setThemeOpen(true)} className="rounded-xl border px-4 py-3 text-xs font-black">
+                  <Palette size={15} className="mr-1 inline" /> Theme
                 </button>
-
-                <button
-                  onClick={ownerLogout}
-                  className="rounded-xl border px-4 py-3 text-sm font-bold"
-                >
-                  <LogOut
-                    size={17}
-                    className="mr-1 inline"
-                  />
-                  Logout
+                <button onClick={openAddProduct} className="rounded-xl bg-black px-4 py-3 text-xs font-black text-white">
+                  <Plus size={15} className="mr-1 inline" /> Add Product
                 </button>
-
+                <button onClick={ownerLogout} className="rounded-xl border px-4 py-3 text-xs font-black">
+                  <LogOut size={15} className="mr-1 inline" /> Logout
+                </button>
               </div>
-
             </div>
 
-            {/* PRODUCTS */}
-
-            <div className="mb-12">
-
-              <h3 className="mb-4 text-xl font-black">
-                Products
-              </h3>
-
-              <div className="overflow-x-auto rounded-2xl bg-slate-50">
-
-                <table className="w-full min-w-[700px] text-left text-sm">
-
-                  <thead>
-                    <tr className="border-b">
-                      <th className="p-4">Product</th>
-                      <th className="p-4">Category</th>
-                      <th className="p-4">Price</th>
-                      <th className="p-4">Stock</th>
-                      <th className="p-4">Actions</th>
+            <div className="mb-12 overflow-hidden rounded-3xl border border-black/5">
+              <div className="flex items-center justify-between border-b p-5">
+                <div>
+                  <h3 className="font-black">Products</h3>
+                  <p className="text-xs text-black/40">Add, edit or remove inventory.</p>
+                </div>
+                <span className="rounded-full bg-black px-3 py-1 text-[10px] font-black text-white">{products.length}</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <thead className="bg-[#fafafa] text-[10px] uppercase tracking-wider text-black/40">
+                    <tr>
+                      <th className="p-4">Product</th><th className="p-4">Style</th><th className="p-4">Price</th>
+                      <th className="p-4">Stock</th><th className="p-4">Actions</th>
                     </tr>
                   </thead>
-
                   <tbody>
-
                     {products.map((product) => (
-
-                      <tr
-                        key={product.id}
-                        className="border-b last:border-0"
-                      >
-
+                      <tr key={product.id} className="border-t border-black/5">
                         <td className="p-4">
-
                           <div className="flex items-center gap-3">
-
-                            {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt=""
-                                className="h-12 w-12 rounded-xl object-cover"
-                              />
-                            ) : (
-                              <div className="h-12 w-12 rounded-xl bg-slate-200" />
-                            )}
-
-                            <span className="font-bold">
-                              {product.name}
-                            </span>
-
+                            {product.image_url ? <img src={product.image_url} alt="" className="h-11 w-11 rounded-xl object-cover" /> : <div className="h-11 w-11 rounded-xl bg-black/5" />}
+                            <div><div className="font-black">{product.name}</div><div className="text-xs text-black/40">{product.gender} · {product.age_group}</div></div>
                           </div>
-
                         </td>
-
+                        <td className="p-4">{product.style === "Formal" ? "Official" : product.style}</td>
+                        <td className="p-4 font-black">{money(product.price)}</td>
+                        <td className="p-4">{product.stock}</td>
                         <td className="p-4">
-                          {product.category}
-                        </td>
-
-                        <td className="p-4 font-bold">
-                          {money(product.price)}
-                        </td>
-
-                        <td className="p-4">
-                          {product.stock}
-                        </td>
-
-                        <td className="p-4">
-
                           <div className="flex gap-2">
-
-                            <button
-                              onClick={() =>
-                                openEditProduct(product)
-                              }
-                              className="rounded-lg border p-2"
-                            >
-                              <Edit3 size={16} />
-                            </button>
-
-                            <button
-                              onClick={() =>
-                                deleteProduct(product)
-                              }
-                              className="rounded-lg border p-2 text-red-600"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-
+                            <button onClick={() => openEditProduct(product)} className="rounded-lg border p-2"><Edit3 size={15} /></button>
+                            <button onClick={() => deleteProduct(product)} className="rounded-lg border p-2 text-red-600"><Trash2 size={15} /></button>
                           </div>
-
                         </td>
-
                       </tr>
-
                     ))}
-
                   </tbody>
-
                 </table>
-
               </div>
-
             </div>
-
-            {/* REFERRAL MANAGEMENT */}
 
             <div className="mb-12">
-
               <div className="mb-4">
-
-                <p className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                  Referral Program
-                </p>
-
-                <h3 className="text-xl font-black">
-                  Referral Codes
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Customers receive {REFERRAL_DISCOUNT_PERCENT}% off
-                  after {REFERRAL_THRESHOLD} successful referrals.
-                </p>
-
+                <h3 className="text-xl font-black">Referral Program</h3>
+                <p className="text-sm text-black/40">Customers unlock {REFERRAL_DISCOUNT_PERCENT}% off after {REFERRAL_THRESHOLD} successful referrals.</p>
               </div>
 
-              <div className="mb-5 rounded-2xl bg-slate-50 p-4">
-
-                <div className="flex flex-col gap-3 sm:flex-row">
-
-                  <input
-                    value={newReferralName}
-                    onChange={(event) =>
-                      setNewReferralName(
-                        event.target.value
-                      )
-                    }
-                    placeholder="Referrer's name"
-                    className="flex-1 rounded-xl border bg-white px-4 py-3 outline-none"
-                  />
-
-                  <button
-                    onClick={createReferralCode}
-                    disabled={creatingReferral}
-                    className="rounded-xl bg-slate-900 px-5 py-3 font-bold text-white disabled:opacity-50"
-                  >
-                    <Gift
-                      size={17}
-                      className="mr-2 inline"
-                    />
-
-                    {creatingReferral
-                      ? "Creating..."
-                      : "Create Code"}
-                  </button>
-
-                </div>
-
+              <div className="mb-5 flex flex-col gap-2 rounded-2xl bg-[#f7f6f3] p-4 sm:flex-row">
+                <input
+                  value={newReferralName}
+                  onChange={(e) => setNewReferralName(e.target.value)}
+                  placeholder="Referrer's name"
+                  className="flex-1 rounded-xl border bg-white px-4 py-3 text-sm outline-none"
+                />
+                <button onClick={createReferralCode} disabled={creatingReferral} className="rounded-xl bg-black px-5 py-3 text-sm font-black text-white">
+                  <Gift size={16} className="mr-2 inline" /> {creatingReferral ? "Creating..." : "Create Code"}
+                </button>
               </div>
 
-              {referralCodes.length === 0 ? (
-                <div className="rounded-2xl bg-slate-50 p-8 text-center text-slate-500">
-                  No referral codes yet.
-                </div>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-                  {referralCodes.map((referral) => {
-
-                    const progress = Math.min(
-                      REFERRAL_THRESHOLD,
-                      Number(
-                        referral.total_referrals || 0
-                      )
-                    );
-
-                    return (
-                      <div
-                        key={referral.id}
-                        className="rounded-2xl bg-slate-50 p-5"
-                      >
-
-                        <div className="flex items-start justify-between gap-3">
-
-                          <div>
-
-                            <div className="font-black">
-                              {referral.owner_name}
-                            </div>
-
-                            <div className="mt-1 text-xl font-black tracking-wider">
-                              {referral.code}
-                            </div>
-
-                          </div>
-
-                          <button
-                            onClick={() =>
-                              toggleReferralCode(
-                                referral
-                              )
-                            }
-                            className={`rounded-full px-3 py-1 text-xs font-bold ${
-                              referral.active
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {referral.active
-                              ? "Active"
-                              : "Inactive"}
-                          </button>
-
-                        </div>
-
-                        <button
-                          onClick={() =>
-                            copyReferralCode(
-                              referral.code
-                            )
-                          }
-                          className="mt-3 flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-sm font-bold"
-                        >
-                          <Copy size={15} />
-                          Copy Code
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {referralCodes.map((referral) => {
+                  const progress = Math.min(REFERRAL_THRESHOLD, Number(referral.total_referrals || 0));
+                  return (
+                    <div key={referral.id} className="rounded-2xl bg-[#f7f6f3] p-5">
+                      <div className="flex justify-between gap-3">
+                        <div><div className="font-black">{referral.owner_name}</div><div className="mt-1 text-lg font-black tracking-wider">{referral.code}</div></div>
+                        <button onClick={() => toggleReferralCode(referral)} className="h-fit rounded-full bg-white px-3 py-1 text-[10px] font-black">
+                          {referral.active ? "Active" : "Inactive"}
                         </button>
-
-                        <div className="mt-4 text-sm">
-
-                          <div className="flex justify-between">
-                            <span>Successful referrals</span>
-
-                            <strong>
-                              {referral.total_referrals || 0}
-                            </strong>
-                          </div>
-
-                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
-
-                            <div
-                              className="h-full bg-slate-900"
-                              style={{
-                                width: `${
-                                  (progress /
-                                    REFERRAL_THRESHOLD) *
-                                  100
-                                }%`,
-                              }}
-                            />
-
-                          </div>
-
-                          <div className="mt-2 text-xs text-slate-500">
-                            {Math.max(
-                              0,
-                              REFERRAL_THRESHOLD -
-                                Number(
-                                  referral.total_referrals ||
-                                    0
-                                )
-                            )}{" "}
-                            more needed for discount
-                          </div>
-
-                        </div>
-
-                        <div className="mt-4 text-sm">
-
-                          <span className="text-slate-500">
-                            Discounts awarded:
-                          </span>{" "}
-
-                          <strong>
-                            {money(
-                              referral.total_discount_awarded
-                            )}
-                          </strong>
-
-                        </div>
-
                       </div>
-                    );
-                  })}
-
-                </div>
-              )}
-
+                      <button onClick={() => copyReferralCode(referral.code)} className="mt-3 rounded-xl border bg-white px-3 py-2 text-xs font-black"><Copy size={14} className="mr-1 inline" /> Copy</button>
+                      <div className="mt-4 flex justify-between text-xs font-bold"><span>Successful referrals</span><span>{referral.total_referrals || 0}</span></div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-white"><div className="h-full" style={{ width: `${progress / REFERRAL_THRESHOLD * 100}%`, background: theme.accent }} /></div>
+                      <div className="mt-2 text-[11px] text-black/40">{Math.max(0, REFERRAL_THRESHOLD - Number(referral.total_referrals || 0))} more needed for discount.</div>
+                      <div className="mt-4 text-xs text-black/50">Discounts awarded: <strong className="text-black">{money(referral.total_discount_awarded)}</strong></div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* ORDERS */}
-
             <div>
-
-              <div className="mb-4 flex items-center justify-between">
-
-                <h3 className="text-xl font-black">
-                  Customer Orders
-                </h3>
-
-                <button
-                  onClick={loadOrders}
-                  className="rounded-xl border px-3 py-2 text-sm font-bold"
-                >
-                  <RefreshCw
-                    size={15}
-                    className="mr-1 inline"
-                  />
-                  Refresh
-                </button>
-
+              <div className="mb-4 flex items-end justify-between">
+                <div><h3 className="text-xl font-black">Customer Orders</h3><p className="text-sm text-black/40">Verify payments and move orders through the pipeline.</p></div>
+                <button onClick={loadOrders} className="rounded-xl border px-3 py-2 text-xs font-black"><RefreshCw size={14} className="mr-1 inline" /> Refresh</button>
               </div>
 
               {orders.length === 0 ? (
-                <div className="rounded-2xl bg-slate-50 p-10 text-center text-slate-500">
-                  No orders yet.
-                </div>
+                <div className="rounded-2xl bg-[#f7f6f3] p-10 text-center text-sm text-black/40">No orders yet.</div>
               ) : (
                 <div className="space-y-4">
-
                   {orders.map((order) => (
-
-                    <div
-                      key={order.id}
-                      className="rounded-2xl bg-slate-50 p-5"
-                    >
-
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-
+                    <div key={order.id} className="rounded-2xl bg-[#f7f6f3] p-5">
+                      <div className="grid gap-6 lg:grid-cols-[1fr_220px]">
                         <div>
-
-                          <div className="flex flex-wrap items-center gap-2">
-
-                            <span className="font-black">
-                              Order #
-                              {order.id.slice(0, 8)}
-                            </span>
-
-                            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold">
-                              {order.order_status}
-                            </span>
-
-                            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold">
-                              Payment:{" "}
-                              {order.payment_status}
-                            </span>
-
+                          <div className="flex flex-wrap gap-2">
+                            <span className="font-black">Order #{order.id.slice(0, 8)}</span>
+                            <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black">{order.order_status}</span>
+                            <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black">Payment: {order.payment_status}</span>
                           </div>
-
-                          <div className="mt-3 space-y-1 text-sm">
-
-                            <div>
-                              <User
-                                size={15}
-                                className="mr-1 inline"
-                              />
-                              {order.customer_name ||
-                                "Customer"}
-                            </div>
-
-                            <div>
-                              <Phone
-                                size={15}
-                                className="mr-1 inline"
-                              />
-                              {order.customer_phone}
-                            </div>
-
-                            <div className="font-black">
-                              Total: {money(order.total)}
-                            </div>
-
-                            {Number(
-                              order.referral_discount
-                            ) > 0 && (
-                              <div className="font-bold text-green-600">
-                                Referral discount: -
-                                {money(
-                                  order.referral_discount
-                                )}
-                              </div>
-                            )}
-
-                            {order.referral_code && (
-                              <div>
-                                Referral code:{" "}
-                                <strong>
-                                  {order.referral_code}
-                                </strong>
-                              </div>
-                            )}
-
-                            <div>
-                              M-Pesa receipt:{" "}
-                              <strong>
-                                {order.mpesa_receipt ||
-                                  "Not provided"}
-                              </strong>
-                            </div>
-
+                          <div className="mt-4 space-y-1 text-sm">
+                            <div><User size={14} className="mr-1 inline" /> {order.customer_name}</div>
+                            <div><Phone size={14} className="mr-1 inline" /> {order.customer_phone}</div>
+                            <div className="font-black">Total: {money(order.total)}</div>
+                            <div>M-Pesa receipt: <strong>{order.mpesa_receipt || "Not provided"}</strong></div>
+                            {order.referral_code && <div>Referral: <strong>{order.referral_code}</strong></div>}
                           </div>
-
                           <div className="mt-4">
-
-                            <p className="mb-2 text-xs font-bold uppercase text-slate-400">
-                              Items
-                            </p>
-
-                            <div className="space-y-1">
-
-                              {order.order_items?.map(
-                                (item) => (
-                                  <div
-                                    key={item.id}
-                                    className="text-sm"
-                                  >
-                                    {item.product_name} ×{" "}
-                                    {item.quantity} —{" "}
-                                    {money(
-                                      Number(item.price) *
-                                        item.quantity
-                                    )}
-                                  </div>
-                                )
-                              )}
-
-                            </div>
-
+                            <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-black/35">Items</div>
+                            {order.order_items?.map((item) => (
+                              <div key={item.id} className="text-sm">{item.product_name} × {item.quantity} — {money(Number(item.price) * item.quantity)}</div>
+                            ))}
                           </div>
-
                         </div>
-
-                        <div className="flex flex-col gap-2">
-
-                          <label className="text-xs font-bold text-slate-500">
-                            Payment status
-                          </label>
-
-                          <select
-                            value={
-                              order.payment_status
-                            }
-                            onChange={(event) =>
-                              updateOrder(
-                                order.id,
-                                "payment_status",
-                                event.target.value
-                              )
-                            }
-                            className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold outline-none"
-                          >
-                            <option value="pending">
-                              Pending
-                            </option>
-
-                            <option value="paid">
-                              Paid
-                            </option>
-
-                            <option value="failed">
-                              Failed
-                            </option>
-
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-black/40">Payment</label>
+                          <select value={order.payment_status} onChange={(e) => updateOrder(order.id, "payment_status", e.target.value)} className="w-full rounded-xl border bg-white px-3 py-3 text-sm font-bold">
+                            <option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option>
                           </select>
-
-                          <label className="mt-2 text-xs font-bold text-slate-500">
-                            Order status
-                          </label>
-
-                          <select
-                            value={
-                              order.order_status
-                            }
-                            onChange={(event) =>
-                              updateOrder(
-                                order.id,
-                                "order_status",
-                                event.target.value
-                              )
-                            }
-                            className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold outline-none"
-                          >
-
-                            <option value="new">
-                              New
-                            </option>
-
-                            <option value="confirmed">
-                              Confirmed
-                            </option>
-
-                            <option value="processing">
-                              Processing
-                            </option>
-
-                            <option value="ready">
-                              Ready
-                            </option>
-
-                            <option value="completed">
-                              Completed
-                            </option>
-
-                            <option value="cancelled">
-                              Cancelled
-                            </option>
-
+                          <label className="mt-3 block text-[10px] font-black uppercase tracking-wider text-black/40">Order status</label>
+                          <select value={order.order_status} onChange={(e) => updateOrder(order.id, "order_status", e.target.value)} className="w-full rounded-xl border bg-white px-3 py-3 text-sm font-bold">
+                            <option value="new">New</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="ready">Ready</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
                           </select>
-
                         </div>
-
                       </div>
-
                     </div>
-
                   ))}
-
                 </div>
               )}
-
             </div>
-
           </div>
-
         </section>
       )}
 
       {/* FOOTER */}
-
-      <footer className="border-t bg-white px-4 py-10">
-
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-
-          <div>
-            © {new Date().getFullYear()} Baleking
+      <footer className="border-t bg-[#111] px-4 py-12 text-white">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="lg:col-span-2">
+              <div className="text-2xl font-black tracking-tight">BALEKING</div>
+              <p className="mt-2 max-w-md text-sm leading-6 text-white/40">
+                Where style meets elegance. A premium fashion experience for men, women and children.
+              </p>
+            </div>
+            <div>
+              <div className="text-xs font-black uppercase tracking-wider" style={{ color: theme.accent }}>Explore</div>
+              <div className="mt-3 space-y-2 text-sm text-white/50">
+                <button onClick={() => chooseGender("Male")} className="block">Male</button>
+                <button onClick={() => chooseGender("Female")} className="block">Female</button>
+                <button onClick={() => setAgeFilter("Children")} className="block">Children</button>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-black uppercase tracking-wider" style={{ color: theme.accent }}>Style</div>
+              <div className="mt-3 space-y-2 text-sm text-white/50">
+                <button onClick={() => chooseStyle("Casual")} className="block">Casual</button>
+                <button onClick={() => chooseStyle("Formal")} className="block">Official</button>
+                <button onClick={() => chooseStyle("Streetwear")} className="block">Streetwear</button>
+              </div>
+            </div>
           </div>
-
-          <div>
-            Fashion for men, women & children.
+          <div className="mt-10 border-t border-white/10 pt-6 text-xs text-white/30">
+            © {new Date().getFullYear()} Baleking. All rights reserved.
           </div>
-
         </div>
-
       </footer>
 
-      {/* CART */}
-
+      {/* CART DRAWER */}
       {cartOpen && (
-        <div className="fixed inset-0 z-[80]">
-
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setCartOpen(false)}
-          />
-
+        <div className="fixed inset-0 z-[100]">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCartOpen(false)} />
           <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
-
             <div className="flex items-center justify-between border-b p-5">
-
-              <div>
-
-                <h2 className="text-xl font-black">
-                  Your Cart
-                </h2>
-
-                <p className="text-sm text-slate-500">
-                  {cartCount} item(s)
-                </p>
-
-              </div>
-
-              <button
-                onClick={() => setCartOpen(false)}
-              >
-                <X />
-              </button>
-
+              <div><h2 className="text-xl font-black">Your Bag</h2><p className="text-xs text-black/40">{cartCount} item(s)</p></div>
+              <button onClick={() => setCartOpen(false)}><X /></button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-5">
-
-              {cart.length === 0 ? (
-                <div className="py-20 text-center">
-
-                  <ShoppingBag
-                    size={50}
-                    className="mx-auto mb-4 text-slate-300"
-                  />
-
-                  <h3 className="font-bold">
-                    Your cart is empty
-                  </h3>
-
+              {!cart.length ? (
+                <div className="py-24 text-center">
+                  <ShoppingBag size={48} className="mx-auto mb-4 text-black/10" />
+                  <h3 className="font-black">Your bag is waiting.</h3>
+                  <p className="mt-1 text-sm text-black/40">Add something you love.</p>
                 </div>
               ) : (
-
-                <div className="space-y-4">
-
+                <div className="space-y-3">
                   {cart.map((item) => (
-
-                    <div
-                      key={item.id}
-                      className="flex gap-3 rounded-2xl border p-3"
-                    >
-
-                      {item.image_url ? (
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="h-20 w-16 rounded-xl object-cover"
-                        />
-                      ) : (
-                        <div className="h-20 w-16 rounded-xl bg-slate-100" />
-                      )}
-
+                    <div key={item.id} className="flex gap-3 rounded-2xl border p-3">
+                      {item.image_url ? <img src={item.image_url} alt="" className="h-20 w-16 rounded-xl object-cover" /> : <div className="h-20 w-16 rounded-xl bg-black/5" />}
                       <div className="min-w-0 flex-1">
-
-                        <div className="truncate font-black">
-                          {item.name}
-                        </div>
-
-                        <div className="text-sm text-slate-500">
-                          {money(item.price)}
-                        </div>
-
+                        <div className="truncate font-black">{item.name}</div>
+                        <div className="text-xs text-black/40">{money(item.price)}</div>
                         <div className="mt-2 flex items-center gap-2">
-
-                          <button
-                            onClick={() =>
-                              decreaseCart(item.id)
-                            }
-                            className="rounded-lg border p-1"
-                          >
-                            <Minus size={14} />
-                          </button>
-
-                          <span className="w-6 text-center text-sm font-bold">
-                            {item.quantity}
-                          </span>
-
-                          <button
-                            onClick={() =>
-                              increaseCart(item.id)
-                            }
-                            className="rounded-lg border p-1"
-                          >
-                            <Plus size={14} />
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              removeFromCart(item.id)
-                            }
-                            className="ml-auto text-red-500"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-
+                          <button onClick={() => decreaseCart(item.id)} className="rounded-lg border p-1"><Minus size={13} /></button>
+                          <span className="w-5 text-center text-xs font-black">{item.quantity}</span>
+                          <button onClick={() => increaseCart(item.id)} className="rounded-lg border p-1"><Plus size={13} /></button>
+                          <button onClick={() => removeFromCart(item.id)} className="ml-auto text-red-500"><Trash2 size={15} /></button>
                         </div>
-
                       </div>
-
                     </div>
-
                   ))}
-
                 </div>
-
               )}
-
             </div>
-
             {cart.length > 0 && (
-
               <div className="border-t p-5">
-
-                <div className="mb-2 flex justify-between">
-
-                  <span className="font-semibold">
-                    Subtotal
-                  </span>
-
-                  <span className="font-bold">
-                    {money(cartSubtotal)}
-                  </span>
-
-                </div>
-
-                <button
-                  onClick={openCheckout}
-                  className="w-full rounded-2xl bg-slate-900 py-4 font-black text-white"
-                >
-                  Checkout
-                </button>
-
+                <div className="mb-2 flex justify-between text-sm"><span>Subtotal</span><strong>{money(cartSubtotal)}</strong></div>
+                <button onClick={openCheckout} className="w-full rounded-2xl bg-black py-4 text-sm font-black text-white">Continue to checkout</button>
               </div>
-
             )}
-
           </aside>
-
         </div>
       )}
 
       {/* CHECKOUT */}
-
       {customerOpen && (
-
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4">
-
-          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-6">
-
-            <div className="mb-5 flex items-center justify-between">
-
-              <div>
-
-                <h2 className="text-2xl font-black">
-                  Checkout
-                </h2>
-
-                <p className="text-sm text-slate-500">
-                  Review your order before paying.
-                </p>
-
-              </div>
-
-              <button
-                onClick={() =>
-                  setCustomerOpen(false)
-                }
-              >
-                <X />
-              </button>
-
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-[2rem] bg-white p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <div><div className="text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>Secure checkout</div><h2 className="mt-1 text-2xl font-black">Complete your order</h2></div>
+              <button onClick={() => setCustomerOpen(false)}><X /></button>
             </div>
 
             <div className="space-y-4">
-
-              <div>
-
-                <label className="mb-1 block text-sm font-bold">
-                  Your name
-                </label>
-
-                <input
-                  value={customerName}
-                  onChange={(event) =>
-                    setCustomerName(
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                  placeholder="Enter your name"
-                />
-
-              </div>
-
-              <div>
-
-                <label className="mb-1 block text-sm font-bold">
-                  Phone number
-                </label>
-
-                <input
-                  value={customerPhone}
-                  onChange={(event) =>
-                    setCustomerPhone(
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                  placeholder="07XXXXXXXX"
-                />
-
-              </div>
-
-              {/* REFERRAL */}
+              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Your name" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
+              <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Phone number" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
 
               <div className="rounded-2xl border p-4">
-
-                <div className="flex items-center gap-2 font-black">
-                  <Gift size={19} />
-                  Referral Discount
-                </div>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  Have a referral code? Enter it below.
-                </p>
-
+                <div className="font-black"><Gift size={17} className="mr-2 inline" /> Referral reward</div>
+                <p className="mt-1 text-xs text-black/40">Use a referral code if someone invited you.</p>
                 <div className="mt-3 flex gap-2">
-
-                  <input
-                    value={referralCodeInput}
-                    onChange={(event) => {
-                      setReferralCodeInput(
-                        event.target.value.toUpperCase()
-                      );
-                      setReferralInfo(null);
-                    }}
-                    placeholder="BALEKING1234"
-                    className="min-w-0 flex-1 rounded-xl border px-3 py-3 uppercase outline-none"
-                  />
-
-                  <button
-                    onClick={checkReferralCode}
-                    disabled={checkingReferral}
-                    className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
-                  >
-                    {checkingReferral
-                      ? "Checking..."
-                      : "Apply"}
-                  </button>
-
+                  <input value={referralCodeInput} onChange={(e) => { setReferralCodeInput(e.target.value.toUpperCase()); setReferralInfo(null); }} placeholder="BALEKING1234" className="min-w-0 flex-1 rounded-xl border px-3 py-3 text-sm uppercase outline-none" />
+                  <button onClick={checkReferralCode} disabled={checkingReferral} className="rounded-xl bg-black px-4 py-3 text-xs font-black text-white">{checkingReferral ? "Checking..." : "Apply"}</button>
                 </div>
-
                 {referralInfo && (
-                  <div className="mt-3 rounded-xl bg-slate-100 p-3 text-sm">
-
-                    <div className="font-bold">
-                      Code belongs to:{" "}
-                      {referralInfo.owner_name}
-                    </div>
-
-                    <div className="mt-1 text-slate-500">
-                      Successful referrals:{" "}
-                      {referralInfo.successfulReferrals}
-                      {" / "}
-                      {REFERRAL_THRESHOLD}
-                    </div>
-
-                    {referralInfo.qualifies ? (
-                      <div className="mt-2 font-bold text-green-600">
-                        ✓ {REFERRAL_DISCOUNT_PERCENT}% discount applied
-                      </div>
-                    ) : (
-                      <div className="mt-2 text-slate-500">
-                        Discount activates after{" "}
-                        {REFERRAL_THRESHOLD} successful
-                        referrals.
-                      </div>
-                    )}
-
+                  <div className="mt-3 rounded-xl p-3 text-xs" style={{ background: theme.accentSoft }}>
+                    <strong>{referralInfo.owner_name}</strong> · {referralInfo.successfulReferrals}/{REFERRAL_THRESHOLD} referrals
+                    <div className="mt-1 font-bold">{referralInfo.qualifies ? `✓ ${REFERRAL_DISCOUNT_PERCENT}% discount applied` : "Keep referring to unlock your discount."}</div>
                   </div>
                 )}
-
               </div>
 
-              {/* PAYMENT */}
-
-              <div className="rounded-2xl bg-slate-100 p-4">
-
-                <div className="flex items-center gap-2 font-black">
-
-                  <CreditCard size={19} />
-
-                  M-Pesa Payment
-
-                </div>
-
+              <div className="rounded-2xl bg-[#f5f4f1] p-5">
+                <div className="font-black"><CreditCard size={17} className="mr-2 inline" /> M-Pesa</div>
                 <div className="mt-4 space-y-2 text-sm">
-
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <strong>
-                      {money(cartSubtotal)}
-                    </strong>
-                  </div>
-
-                  {referralDiscount > 0 && (
-                    <div className="flex justify-between text-green-600">
-
-                      <span>
-                        Referral discount
-                      </span>
-
-                      <strong>
-                        -{money(referralDiscount)}
-                      </strong>
-
-                    </div>
-                  )}
-
-                  <div className="flex justify-between border-t pt-2 text-lg">
-
-                    <strong>
-                      Total to pay
-                    </strong>
-
-                    <strong>
-                      {money(finalTotal)}
-                    </strong>
-
-                  </div>
-
+                  <div className="flex justify-between"><span>Subtotal</span><strong>{money(cartSubtotal)}</strong></div>
+                  {referralDiscount > 0 && <div className="flex justify-between text-green-600"><span>Referral discount</span><strong>-{money(referralDiscount)}</strong></div>}
+                  <div className="flex justify-between border-t pt-3 text-lg"><strong>Total</strong><strong>{money(finalTotal)}</strong></div>
                 </div>
-
-                <p className="mt-4 text-sm text-slate-600">
-                  Send exactly{" "}
-                  <strong>
-                    {money(finalTotal)}
-                  </strong>{" "}
-                  to:
-                </p>
-
-                <div className="mt-2 text-2xl font-black">
-                  {MPESA_NUMBER}
-                </div>
-
-                <p className="mt-2 text-xs text-slate-500">
-                  After paying, enter your M-Pesa transaction
-                  receipt below. The owner will verify the
-                  payment.
-                </p>
-
+                <div className="mt-4 text-xs text-black/50">Send exactly</div>
+                <div className="mt-1 text-2xl font-black">{money(finalTotal)}</div>
+                <div className="mt-1 text-xs text-black/45">to M-Pesa number</div>
+                <div className="mt-1 text-xl font-black">{MPESA_NUMBER}</div>
               </div>
 
-              <div>
+              <input value={mpesaReceipt} onChange={(e) => setMpesaReceipt(e.target.value)} placeholder="M-Pesa transaction receipt" className="w-full rounded-xl border px-4 py-3 text-sm uppercase outline-none" />
 
-                <label className="mb-1 block text-sm font-bold">
-                  M-Pesa receipt number
-                </label>
-
-                <input
-                  value={mpesaReceipt}
-                  onChange={(event) =>
-                    setMpesaReceipt(
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-xl border px-4 py-3 uppercase outline-none"
-                  placeholder="e.g. ABC123XYZ"
-                />
-
-              </div>
-
-              <button
-                onClick={placeOrder}
-                disabled={ownerLoading}
-                className="w-full rounded-2xl bg-slate-900 py-4 font-black text-white disabled:opacity-50"
-              >
-                {ownerLoading
-                  ? "Placing order..."
-                  : "Place Order & WhatsApp"}
+              <button onClick={placeOrder} disabled={ownerLoading} className="w-full rounded-2xl py-4 text-sm font-black disabled:opacity-50" style={{ background: theme.accent, color: "#111" }}>
+                {ownerLoading ? "Placing order..." : "Place order & WhatsApp"}
               </button>
-
+              <p className="text-center text-[10px] text-black/35">Your receipt will be sent with the order for owner verification.</p>
             </div>
-
           </div>
-
         </div>
-
       )}
 
       {/* OWNER LOGIN */}
-
       {ownerOpen && !ownerLoggedIn && (
-
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4">
-
-          <div className="w-full max-w-md rounded-3xl bg-white p-6">
-
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[2rem] bg-white p-6">
             <div className="mb-6 flex items-center justify-between">
-
-              <div>
-
-                <h2 className="text-2xl font-black">
-                  Owner Login
-                </h2>
-
-                <p className="text-sm text-slate-500">
-                  Store management
-                </p>
-
-              </div>
-
-              <button
-                onClick={() =>
-                  setOwnerOpen(false)
-                }
-              >
-                <X />
-              </button>
-
+              <div><div className="text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>Private access</div><h2 className="mt-1 text-2xl font-black">Owner login</h2></div>
+              <button onClick={() => setOwnerOpen(false)}><X /></button>
             </div>
-
             <div className="space-y-4">
-
-              <input
-                type="email"
-                value={ownerEmail}
-                onChange={(event) =>
-                  setOwnerEmail(
-                    event.target.value
-                  )
-                }
-                placeholder="Owner email"
-                className="w-full rounded-xl border px-4 py-3 outline-none"
-              />
-
-              <input
-                type="password"
-                value={ownerPassword}
-                onChange={(event) =>
-                  setOwnerPassword(
-                    event.target.value
-                  )
-                }
-                placeholder="Password"
-                className="w-full rounded-xl border px-4 py-3 outline-none"
-              />
-
-              <button
-                onClick={ownerLogin}
-                disabled={ownerLoading}
-                className="w-full rounded-xl bg-slate-900 py-3 font-black text-white disabled:opacity-50"
-              >
-
-                <LogIn
-                  size={17}
-                  className="mr-2 inline"
-                />
-
-                {ownerLoading
-                  ? "Logging in..."
-                  : "Login"}
-
+              <input type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="Owner email" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
+              <input type="password" value={ownerPassword} onChange={(e) => setOwnerPassword(e.target.value)} placeholder="Password" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
+              <button onClick={ownerLogin} disabled={ownerLoading} className="w-full rounded-xl bg-black py-3 text-sm font-black text-white">
+                <LogIn size={16} className="mr-2 inline" /> {ownerLoading ? "Logging in..." : "Login"}
               </button>
-
             </div>
-
           </div>
-
         </div>
+      )}
 
+      {/* THEME SELECTOR */}
+      {themeOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-[2rem] bg-white p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <div><div className="text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>Store atmosphere</div><h2 className="mt-1 text-2xl font-black">Choose your Baleking theme</h2><p className="mt-1 text-sm text-black/40">The owner can change the visual atmosphere without changing products.</p></div>
+              <button onClick={() => setThemeOpen(false)}><X /></button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {Object.entries(THEMES).map(([key, value]) => (
+                <button
+                  key={key}
+                  onClick={() => { setThemeKey(key); setThemeOpen(false); setMessage(`${value.name} theme activated.`); }}
+                  className={`overflow-hidden rounded-2xl border-2 text-left transition hover:-translate-y-1 ${themeKey === key ? "border-black" : "border-black/5"}`}
+                >
+                  <div className={`h-24 bg-gradient-to-br ${value.hero} p-4 text-white`}>
+                    <div className="flex items-center justify-between">
+                      <Crown size={18} style={{ color: value.accent }} />
+                      {themeKey === key && <span className="rounded-full bg-white px-2 py-1 text-[9px] font-black text-black">ACTIVE</span>}
+                    </div>
+                    <div className="mt-6 text-xs font-black">{value.label}</div>
+                  </div>
+                  <div className="p-4">
+                    <div className="font-black">{value.name}</div>
+                    <div className="mt-1 text-xs text-black/40">Premium, modern and captivating.</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* PRODUCT FORM */}
-
       {productFormOpen && (
-
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4">
-
-          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6">
-
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-6">
             <div className="mb-6 flex items-center justify-between">
-
-              <div>
-
-                <h2 className="text-2xl font-black">
-                  {editingProduct
-                    ? "Edit Product"
-                    : "Add Product"}
-                </h2>
-
-                <p className="text-sm text-slate-500">
-                  Changes are saved directly to Supabase.
-                </p>
-
-              </div>
-
-              <button
-                onClick={() =>
-                  setProductFormOpen(false)
-                }
-              >
-                <X />
-              </button>
-
+              <div><div className="text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>Inventory studio</div><h2 className="mt-1 text-2xl font-black">{editingProduct ? "Edit product" : "Add product"}</h2></div>
+              <button onClick={() => setProductFormOpen(false)}><X /></button>
             </div>
 
-            <form
-              onSubmit={saveProduct}
-              className="space-y-4"
-            >
-
-              <input
-                value={productForm.name}
-                onChange={(event) =>
-                  updateProductForm(
-                    "name",
-                    event.target.value
-                  )
-                }
-                placeholder="Product name"
-                className="w-full rounded-xl border px-4 py-3 outline-none"
-              />
-
-              <textarea
-                value={productForm.description}
-                onChange={(event) =>
-                  updateProductForm(
-                    "description",
-                    event.target.value
-                  )
-                }
-                placeholder="Description"
-                rows={3}
-                className="w-full rounded-xl border px-4 py-3 outline-none"
-              />
+            <form onSubmit={saveProduct} className="space-y-4">
+              <input value={productForm.name} onChange={(e) => updateProductForm("name", e.target.value)} placeholder="Product name" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
+              <textarea value={productForm.description} onChange={(e) => updateProductForm("description", e.target.value)} placeholder="Description" rows={3} className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
 
               <div className="grid grid-cols-2 gap-3">
-
-                <input
-                  type="number"
-                  min="0"
-                  value={productForm.price}
-                  onChange={(event) =>
-                    updateProductForm(
-                      "price",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Price"
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                />
-
-                <input
-                  type="number"
-                  min="0"
-                  value={productForm.old_price}
-                  onChange={(event) =>
-                    updateProductForm(
-                      "old_price",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Old price (optional)"
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                />
-
+                <input type="number" min="0" value={productForm.price} onChange={(e) => updateProductForm("price", e.target.value)} placeholder="Price" className="rounded-xl border px-4 py-3 text-sm outline-none" />
+                <input type="number" min="0" value={productForm.old_price} onChange={(e) => updateProductForm("old_price", e.target.value)} placeholder="Old price (optional)" className="rounded-xl border px-4 py-3 text-sm outline-none" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-
-                <select
-                  value={productForm.category}
-                  onChange={(event) =>
-                    updateProductForm(
-                      "category",
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-xl border px-4 py-3"
-                >
-
-                  {CATEGORIES
-                    .filter(
-                      (item) => item !== "All"
-                    )
-                    .map((item) => (
-                      <option key={item}>
-                        {item}
-                      </option>
-                    ))}
-
+                <select value={productForm.category} onChange={(e) => updateProductForm("category", e.target.value)} className="rounded-xl border px-4 py-3 text-sm">
+                  {PRODUCT_CATEGORIES.map((x) => <option key={x}>{x}</option>)}
                 </select>
-
-                <select
-                  value={productForm.style}
-                  onChange={(event) =>
-                    updateProductForm(
-                      "style",
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-xl border px-4 py-3"
-                >
-
-                  <option>Casual</option>
-                  <option>Formal</option>
-                  <option>Smart Casual</option>
-                  <option>Sport</option>
-                  <option>Traditional</option>
-                  <option>Streetwear</option>
-
+                <select value={productForm.style} onChange={(e) => updateProductForm("style", e.target.value)} className="rounded-xl border px-4 py-3 text-sm">
+                  <option>Casual</option><option>Formal</option><option>Smart Casual</option><option>Sport</option><option>Traditional</option><option>Streetwear</option>
                 </select>
-
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-
-                <select
-                  value={productForm.gender}
-                  onChange={(event) =>
-                    updateProductForm(
-                      "gender",
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-xl border px-4 py-3"
-                >
-
-                  <option>Unisex</option>
-                  <option>Male</option>
-                  <option>Female</option>
-
+                <select value={productForm.gender} onChange={(e) => updateProductForm("gender", e.target.value)} className="rounded-xl border px-4 py-3 text-sm">
+                  <option>Unisex</option><option>Male</option><option>Female</option>
                 </select>
-
-                <select
-                  value={productForm.age_group}
-                  onChange={(event) =>
-                    updateProductForm(
-                      "age_group",
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-xl border px-4 py-3"
-                >
-
-                  <option>Adult</option>
-                  <option>Children</option>
-                  <option>Teen</option>
-                  <option>Baby</option>
-
+                <select value={productForm.age_group} onChange={(e) => updateProductForm("age_group", e.target.value)} className="rounded-xl border px-4 py-3 text-sm">
+                  <option>Adult</option><option>Children</option><option>Teen</option><option>Baby</option>
                 </select>
-
               </div>
 
-              <input
-                type="number"
-                min="0"
-                value={productForm.stock}
-                onChange={(event) =>
-                  updateProductForm(
-                    "stock",
-                    event.target.value
-                  )
-                }
-                placeholder="Stock quantity"
-                className="w-full rounded-xl border px-4 py-3 outline-none"
-              />
+              <input type="number" min="0" value={productForm.stock} onChange={(e) => updateProductForm("stock", e.target.value)} placeholder="Stock quantity" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
 
               <div className="rounded-2xl border p-4">
-
-                <div className="mb-3 font-bold">
-                  Product image
-                </div>
-
-                {productForm.image_url && (
-                  <img
-                    src={productForm.image_url}
-                    alt="Preview"
-                    className="mb-4 h-40 w-full rounded-2xl object-cover"
-                  />
-                )}
-
-                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold">
-
-                  <Upload size={17} />
-
-                  {uploadingImage
-                    ? "Uploading..."
-                    : "Upload Image"}
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={uploadImage}
-                    className="hidden"
-                  />
-
+                <div className="mb-3 font-black">Product image</div>
+                {productForm.image_url && <img src={productForm.image_url} alt="Preview" className="mb-4 h-48 w-full rounded-2xl object-cover" />}
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#f5f4f1] px-4 py-3 text-sm font-black">
+                  <Upload size={16} /> {uploadingImage ? "Uploading..." : "Upload image"}
+                  <input type="file" accept="image/*" onChange={uploadImage} className="hidden" />
                 </label>
-
-                <input
-                  value={productForm.image_url}
-                  onChange={(event) =>
-                    updateProductForm(
-                      "image_url",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Or paste image URL"
-                  className="mt-3 w-full rounded-xl border px-4 py-3 text-sm outline-none"
-                />
-
+                <input value={productForm.image_url} onChange={(e) => updateProductForm("image_url", e.target.value)} placeholder="Or paste image URL" className="mt-3 w-full rounded-xl border px-4 py-3 text-sm outline-none" />
               </div>
 
-              <button
-                type="submit"
-                disabled={
-                  ownerLoading ||
-                  uploadingImage
-                }
-                className="w-full rounded-2xl bg-slate-900 py-4 font-black text-white disabled:opacity-50"
-              >
-
-                {ownerLoading
-                  ? "Saving..."
-                  : editingProduct
-                  ? "Save Changes"
-                  : "Add Product"}
-
+              <button type="submit" disabled={ownerLoading || uploadingImage} className="w-full rounded-2xl py-4 text-sm font-black disabled:opacity-50" style={{ background: theme.accent, color: "#111" }}>
+                {ownerLoading ? "Saving..." : editingProduct ? "Save changes" : "Add product"}
               </button>
-
             </form>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 }
