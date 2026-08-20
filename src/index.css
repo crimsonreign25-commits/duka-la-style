@@ -1,39 +1,873 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap");
 
-html,
-body,
-#root {
-  min-height: 100%;
-  width: 100%;
+/* =========================================================
+   BALEKING — PREMIUM DESIGN SYSTEM
+========================================================= */
+
+:root {
+  --bk-bg: #f7f5f1;
+  --bk-surface: #ffffff;
+  --bk-surface-2: #f0eee9;
+
+  --bk-text: #171717;
+  --bk-muted: #77736b;
+
+  --bk-primary: #111111;
+  --bk-primary-2: #252525;
+
+  --bk-accent: #c9a45c;
+  --bk-accent-light: #e8d3a5;
+
+  --bk-border: rgba(20, 20, 20, 0.09);
+
+  --bk-radius-sm: 12px;
+  --bk-radius-md: 18px;
+  --bk-radius-lg: 26px;
+  --bk-radius-xl: 34px;
+
+  --bk-shadow-sm:
+    0 5px 20px rgba(0, 0, 0, 0.05);
+
+  --bk-shadow-md:
+    0 15px 45px rgba(0, 0, 0, 0.09);
+
+  --bk-shadow-lg:
+    0 25px 80px rgba(0, 0, 0, 0.15);
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f8fafc;
+  padding: 0;
+
+  font-family:
+    "DM Sans",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(201, 164, 92, 0.08),
+      transparent 35%
+    ),
+    var(--bk-bg);
+
+  color: var(--bk-text);
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-* {
-  box-sizing: border-box;
+/* =========================================================
+   TYPOGRAPHY
+========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  letter-spacing: -0.025em;
+}
+
+h1,
+.bk-display {
+  font-family:
+    "Playfair Display",
+    Georgia,
+    serif;
 }
 
 button,
 input,
 textarea,
 select {
-  font: inherit;
+  font-family: inherit;
 }
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+::selection {
+  background: var(--bk-accent);
+  color: #111;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(20, 20, 20, 0.22);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 20, 20, 0.38);
+}
+
+/* =========================================================
+   PREMIUM HEADER
+========================================================= */
+
+header {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.05),
+    0 8px 30px rgba(0, 0, 0, 0.035);
+
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* =========================================================
+   PREMIUM BUTTONS
+========================================================= */
+
+button {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+button:not(:disabled):active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* =========================================================
+   PREMIUM HERO
+========================================================= */
+
+section.bg-slate-900 {
+  position: relative;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(201, 164, 92, 0.18),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(255, 255, 255, 0.06),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      #090909 0%,
+      #151515 45%,
+      #0c0c0c 100%
+    ) !important;
+}
+
+section.bg-slate-900::before {
+  content: "";
+  position: absolute;
+
+  width: 420px;
+  height: 420px;
+
+  right: -180px;
+  top: -180px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(201, 164, 92, 0.22),
+      transparent 65%
+    );
+
+  pointer-events: none;
+}
+
+section.bg-slate-900::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px
+    );
+
+  background-size: 40px 40px;
+
+  mask-image:
+    linear-gradient(
+      to bottom,
+      black,
+      transparent
+    );
+
+  pointer-events: none;
+}
+
+section.bg-slate-900 > div {
+  position: relative;
+  z-index: 2;
+}
+
+/* =========================================================
+   HERO LABEL
+========================================================= */
+
+section.bg-slate-900 p {
+  letter-spacing: 0.3em;
+}
+
+/* =========================================================
+   HERO HEADING
+========================================================= */
+
+section.bg-slate-900 h1 {
+  font-family:
+    "Playfair Display",
+    Georgia,
+    serif;
+
+  background:
+    linear-gradient(
+      120deg,
+      #ffffff 10%,
+      #f2dfb2 50%,
+      #ffffff 90%
+    );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+
+  text-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* =========================================================
+   SHOP NOW BUTTON
+========================================================= */
+
+section.bg-slate-900 button {
+  position: relative;
+  overflow: hidden;
+
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.2);
+}
+
+section.bg-slate-900 button::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 70%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.65),
+      transparent
+    );
+
+  transform: skewX(-20deg);
+
+  transition: left 0.6s ease;
+}
+
+section.bg-slate-900 button:hover::after {
+  left: 140%;
+}
+
+/* =========================================================
+   PRODUCT AREA
+========================================================= */
+
+#products {
+  position: relative;
+}
+
+/* =========================================================
+   CATEGORY PILLS
+========================================================= */
+
+#products .rounded-full {
+  border: 1px solid var(--bk-border);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+#products .rounded-full:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   SEARCH BOX
+========================================================= */
+
+#products input {
+  font-size: 0.95rem;
+}
+
+#products input::placeholder {
+  color: #aaa69f;
+}
+
+#products .max-w-md {
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.045);
+}
+
+/* =========================================================
+   PRODUCT CARDS
+========================================================= */
+
+article {
+  position: relative;
+
+  border:
+    1px solid rgba(0, 0, 0, 0.045);
+
+  box-shadow:
+    0 8px 35px rgba(0, 0, 0, 0.045);
+
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+article:hover {
+  transform:
+    translateY(-7px);
+
+  border-color:
+    rgba(201, 164, 92, 0.25);
+
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================================================
+   PRODUCT IMAGE
+========================================================= */
+
+article .aspect-\[4\/5\] {
+  position: relative;
+}
+
+article img {
+  transition:
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 0.4s ease;
+}
+
+article:hover img {
+  transform: scale(1.055);
+}
+
+/* Image luxury overlay */
+
+article .aspect-\[4\/5\]::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 55%,
+      rgba(0, 0, 0, 0.12)
+    );
+
+  opacity: 0;
+
+  transition: opacity 0.35s ease;
+
+  pointer-events: none;
+}
+
+article:hover .aspect-\[4\/5\]::after {
+  opacity: 1;
+}
+
+/* =========================================================
+   SALE BADGE
+========================================================= */
+
+article .absolute.left-3 {
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #f2e5c7
+    ) !important;
+
+  color: #171717;
+
+  border:
+    1px solid rgba(201, 164, 92, 0.35);
+
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================================
+   ADD BUTTON
+========================================================= */
+
+article button {
+  background:
+    linear-gradient(
+      135deg,
+      #111111,
+      #2b2b2b
+    ) !important;
+
+  box-shadow:
+    0 7px 20px rgba(0, 0, 0, 0.15);
+}
+
+article button:hover {
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.22);
+
+  background:
+    linear-gradient(
+      135deg,
+      #1b1b1b,
+      #3b3b3b
+    ) !important;
+}
+
+/* =========================================================
+   PRICE
+========================================================= */
+
+article .font-black {
+  letter-spacing: -0.02em;
+}
+
+/* =========================================================
+   OWNER DASHBOARD
+========================================================= */
+
+section.border-t.bg-white {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f8f6f1 100%
+    ) !important;
+}
+
+/* =========================================================
+   DASHBOARD CARDS
+========================================================= */
+
+section.border-t.bg-white .bg-slate-50 {
+  border:
+    1px solid rgba(0, 0, 0, 0.045);
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.035);
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead {
+  background:
+    linear-gradient(
+      90deg,
+      #f4f1ea,
+      #faf9f7
+    );
+}
+
+th {
+  font-size: 0.72rem;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.08em;
+
+  color: #77736b;
+}
+
+tbody tr {
+  transition:
+    background 0.2s ease;
+}
+
+tbody tr:hover {
+  background: rgba(201, 164, 92, 0.06);
+}
+
+/* =========================================================
+   MODALS
+========================================================= */
+
+.fixed.inset-0.z-\[90\] {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.fixed.inset-0.z-\[90\] > div {
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.25);
+
+  border:
+    1px solid rgba(255, 255, 255, 0.7);
+
+  animation:
+    bkModalIn 0.28s ease both;
+}
+
+@keyframes bkModalIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(12px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   INPUTS
+========================================================= */
 
 input,
 textarea,
 select {
-  pointer-events: auto;
-  user-select: text;
-  -webkit-user-select: text;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-button {
-  cursor: pointer;
+input:focus,
+textarea:focus,
+select:focus {
+  border-color:
+    rgba(201, 164, 92, 0.75) !important;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(201, 164, 92, 0.11);
+}
+
+/* =========================================================
+   CART DRAWER
+========================================================= */
+
+.fixed.inset-0.z-\[80\] aside {
+  box-shadow:
+    -25px 0 80px rgba(0, 0, 0, 0.2);
+
+  animation:
+    bkCartIn 0.3s ease both;
+}
+
+@keyframes bkCartIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* =========================================================
+   CHECKOUT
+========================================================= */
+
+.fixed.inset-0.z-\[90\] .rounded-3xl {
+  scrollbar-width: thin;
+}
+
+/* =========================================================
+   PAYMENT CARD
+========================================================= */
+
+.bg-slate-100 {
+  background:
+    linear-gradient(
+      135deg,
+      #f3f0e9,
+      #faf9f6
+    ) !important;
+}
+
+/* =========================================================
+   M-PESA NUMBER
+========================================================= */
+
+.text-2xl.font-black {
+  letter-spacing: 0.04em;
+}
+
+/* =========================================================
+   MESSAGE / TOAST
+========================================================= */
+
+.fixed.bottom-5 {
+  background:
+    linear-gradient(
+      135deg,
+      #111111,
+      #252525
+    ) !important;
+
+  border:
+    1px solid rgba(201, 164, 92, 0.3);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.25);
+
+  animation:
+    bkToast 0.3s ease both;
+}
+
+@keyframes bkToast {
+  from {
+    opacity: 0;
+    transform:
+      translate(-50%, 15px)
+      scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translate(-50%, 0)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #f4f1ea
+    ) !important;
+}
+
+/* =========================================================
+   PREMIUM GOLD ACCENTS
+========================================================= */
+
+.bk-gold {
+  color: var(--bk-accent);
+}
+
+.bk-gold-bg {
+  background:
+    linear-gradient(
+      135deg,
+      #c9a45c,
+      #e6cf9d
+    );
+}
+
+/* =========================================================
+   UTILITY — GLASS
+========================================================= */
+
+.bk-glass {
+  background:
+    rgba(255, 255, 255, 0.7);
+
+  backdrop-filter:
+    blur(18px);
+
+  -webkit-backdrop-filter:
+    blur(18px);
+
+  border:
+    1px solid rgba(255, 255, 255, 0.7);
+
+  box-shadow:
+    0 15px 50px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   UTILITY — PREMIUM CARD
+========================================================= */
+
+.bk-premium-card {
+  border:
+    1px solid rgba(201, 164, 92, 0.12);
+
+  border-radius:
+    var(--bk-radius-lg);
+
+  background:
+    rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    var(--bk-shadow-md);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.bk-premium-card:hover {
+  transform:
+    translateY(-5px);
+
+  box-shadow:
+    var(--bk-shadow-lg);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  section.bg-slate-900 {
+    min-height: 540px;
+    display: flex;
+    align-items: center;
+  }
+
+  section.bg-slate-900 h1 {
+    font-size: 2.8rem;
+    line-height: 1.05;
+  }
+
+  #products {
+    padding-top: 2.5rem;
+  }
+
+  article:hover {
+    transform: translateY(-3px);
+  }
+
+  article .p-4 {
+    padding: 0.9rem;
+  }
+}
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media (max-width: 420px) {
+  section.bg-slate-900 h1 {
+    font-size: 2.35rem;
+  }
+
+  article h3 {
+    font-size: 0.9rem;
+  }
+
+  article p {
+    font-size: 0.75rem;
+  }
+
+  article .font-black {
+    font-size: 0.9rem;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
