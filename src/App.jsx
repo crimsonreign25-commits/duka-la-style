@@ -727,6 +727,58 @@ function App() {
     await loadOrders();
   }
 
+  async function acceptPayment(order) {
+    if (!ownerLoggedIn) return setMessage("Owner login required.");
+    if (!order.mpesa_receipt) return setMessage("This payment has no M-Pesa receipt to verify.");
+
+    setOwnerLoading(true);
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          payment_status: "paid",
+          order_status: order.order_status === "new" ? "confirmed" : order.order_status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", order.id);
+
+      if (error) throw error;
+      setMessage(`Payment for order #${order.id.slice(0, 8)} accepted.`);
+      await loadOrders();
+    } catch (error) {
+      console.error(error);
+      setMessage(error.message || "Could not accept payment.");
+    } finally {
+      setOwnerLoading(false);
+    }
+  }
+
+  async function rejectPayment(order) {
+    if (!ownerLoggedIn) return setMessage("Owner login required.");
+    if (!window.confirm(`Reject payment for order #${order.id.slice(0, 8)}?`)) return;
+
+    setOwnerLoading(true);
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          payment_status: "failed",
+          order_status: "cancelled",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", order.id);
+
+      if (error) throw error;
+      setMessage(`Payment for order #${order.id.slice(0, 8)} rejected.`);
+      await loadOrders();
+    } catch (error) {
+      console.error(error);
+      setMessage(error.message || "Could not reject payment.");
+    } finally {
+      setOwnerLoading(false);
+    }
+  }
+
   async function createReferralCode() {
     if (!newReferralName.trim()) {
       setMessage("Enter the referrer's name.");
@@ -1431,32 +1483,58 @@ function App() {
                 <div className="mb-4 flex items-end justify-between">
                   <div>
                     <h3 className="text-xl font-black">Payments</h3>
-                    <p className="text-sm text-black/40">Paid orders are listed here separately from customer orders.</p>
+                    <p className="text-sm text-black/40">Review the M-Pesa receipt, then accept or reject each payment.</p>
                   </div>
                   <button onClick={loadOrders} className="rounded-xl border px-3 py-2 text-xs font-black"><RefreshCw size={14} className="mr-1 inline" /> Refresh</button>
                 </div>
 
-                {orders.filter((order) => order.payment_status === "paid").length === 0 ? (
-                  <div className="rounded-2xl bg-[#f7f6f3] p-10 text-center text-sm text-black/40">No confirmed payments yet.</div>
+                {orders.length === 0 ? (
+                  <div className="rounded-2xl bg-[#f7f6f3] p-10 text-center text-sm text-black/40">No payments yet.</div>
                 ) : (
-                  <div className="overflow-x-auto rounded-2xl border">
-                    <table className="w-full min-w-[720px] text-left text-sm">
-                      <thead className="bg-[#fafafa] text-[10px] uppercase tracking-wider text-black/40">
-                        <tr><th className="p-4">Order</th><th className="p-4">Customer</th><th className="p-4">M-Pesa receipt</th><th className="p-4">Amount</th><th className="p-4">Status</th><th className="p-4">Date</th></tr>
-                      </thead>
-                      <tbody>
-                        {orders.filter((order) => order.payment_status === "paid").map((order) => (
-                          <tr key={order.id} className="border-t border-black/5">
-                            <td className="p-4 font-black">#{order.id.slice(0, 8)}</td>
-                            <td className="p-4"><div className="font-bold">{order.customer_name}</div><div className="text-xs text-black/40">{order.customer_phone}</div></td>
-                            <td className="p-4 font-black">{order.mpesa_receipt || "—"}</td>
-                            <td className="p-4 font-black">{money(order.total)}</td>
-                            <td className="p-4"><span className="rounded-full bg-green-100 px-3 py-1 text-[10px] font-black text-green-700">Paid</span></td>
-                            <td className="p-4 text-xs text-black/50">{order.created_at ? new Date(order.created_at).toLocaleString() : "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <div key={order.id} className="rounded-2xl border bg-[#f7f6f3] p-5">
+                        <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-black">Order #{order.id.slice(0, 8)}</span>
+                              <span className={`rounded-full px-3 py-1 text-[10px] font-black ${order.payment_status === "paid" ? "bg-green-100 text-green-700" : order.payment_status === "failed" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                                {order.payment_status === "paid" ? "Accepted" : order.payment_status === "failed" ? "Rejected" : "Pending review"}
+                              </span>
+                            </div>
+                            <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+                              <div><User size={14} className="mr-1 inline" /> {order.customer_name}</div>
+                              <div><Phone size={14} className="mr-1 inline" /> {order.customer_phone}</div>
+                              <div className="font-black">Amount: {money(order.total)}</div>
+                              <div>Order: <strong>{order.order_status}</strong></div>
+                            </div>
+                            <div className="mt-4 rounded-xl bg-white p-4">
+                              <div className="text-[10px] font-black uppercase tracking-wider text-black/40">M-Pesa receipt</div>
+                              <div className="mt-1 break-all text-lg font-black">{order.mpesa_receipt || "Not provided"}</div>
+                              <div className="mt-1 text-xs text-black/40">Submitted {order.created_at ? new Date(order.created_at).toLocaleString() : "—"}</div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col justify-center gap-2">
+                            {order.payment_status === "pending" && (
+                              <>
+                                <button onClick={() => acceptPayment(order)} disabled={ownerLoading || !order.mpesa_receipt} className="w-full rounded-xl bg-black px-4 py-3 text-sm font-black text-white disabled:opacity-40">
+                                  <CheckCircle size={16} className="mr-2 inline" /> Accept payment
+                                </button>
+                                <button onClick={() => rejectPayment(order)} disabled={ownerLoading} className="w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-black text-red-600 disabled:opacity-40">
+                                  Reject payment
+                                </button>
+                              </>
+                            )}
+                            {order.payment_status === "paid" && (
+                              <div className="rounded-xl bg-green-50 p-4 text-sm font-bold text-green-700">✓ Payment accepted. Order is {order.order_status}.</div>
+                            )}
+                            {order.payment_status === "failed" && (
+                              <div className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700">Payment rejected. Order cancelled.</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
