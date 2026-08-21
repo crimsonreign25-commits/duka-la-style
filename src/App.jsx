@@ -20,6 +20,10 @@ const MPESA_NUMBER = "0710574821";
 const REFERRAL_DISCOUNT_PERCENT = 5;
 const REFERRAL_THRESHOLD = 3;
 
+// Orders that stay unpaid beyond this period are automatically cancelled
+// while the owner dashboard is active. Change this value to suit the store.
+const UNPAID_ORDER_TIMEOUT_MINUTES = 30;
+
 const EMPTY_PRODUCT = {
   name: "",
   description: "",
@@ -87,6 +91,7 @@ function App() {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [referralCodes, setReferralCodes] = useState([]);
+  const [ownerSection, setOwnerSection] = useState("overview");
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -162,8 +167,37 @@ function App() {
       .select("*, order_items (*)")
       .order("created_at", { ascending: false });
 
-    if (!error) setOrders(data || []);
-    else console.error(error);
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const now = Date.now();
+    const timeoutMs = UNPAID_ORDER_TIMEOUT_MINUTES * 60 * 1000;
+    const stalePending = (data || []).filter((order) =>
+      order.payment_status === "pending" &&
+      order.order_status !== "cancelled" &&
+      order.created_at &&
+      now - new Date(order.created_at).getTime() >= timeoutMs
+    );
+
+    if (stalePending.length) {
+      await Promise.all(
+        stalePending.map((order) =>
+          supabase
+            .from("orders")
+            .update({ order_status: "cancelled" })
+            .eq("id", order.id)
+            .eq("payment_status", "pending")
+        )
+      );
+
+      stalePending.forEach((order) => {
+        order.order_status = "cancelled";
+      });
+    }
+
+    setOrders(data || []);
   }
 
   async function loadReferralData() {
@@ -203,6 +237,12 @@ function App() {
 
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!ownerLoggedIn) return;
+    const timer = setInterval(loadOrders, 60 * 1000);
+    return () => clearInterval(timer);
+  }, [ownerLoggedIn]);
 
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -1221,6 +1261,34 @@ function App() {
               </div>
             </div>
 
+            <div className="mb-8 flex flex-wrap gap-2 rounded-2xl bg-[#f7f6f3] p-2">
+              {[
+                ["overview", "Overview"],
+                ["orders", "Orders"],
+                ["payments", "Payments"],
+                ["products", "Products"],
+                ["referrals", "Referrals"],
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setOwnerSection(key)}
+                  className={`rounded-xl px-4 py-2.5 text-xs font-black transition ${ownerSection === key ? "bg-black text-white" : "bg-white text-black/60"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {ownerSection === "overview" && (
+              <div className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-2xl bg-[#f7f6f3] p-5"><div className="text-xs font-black uppercase tracking-wider text-black/40">Products</div><div className="mt-2 text-3xl font-black">{products.length}</div></div>
+                <div className="rounded-2xl bg-[#f7f6f3] p-5"><div className="text-xs font-black uppercase tracking-wider text-black/40">Orders</div><div className="mt-2 text-3xl font-black">{orders.length}</div></div>
+                <div className="rounded-2xl bg-[#f7f6f3] p-5"><div className="text-xs font-black uppercase tracking-wider text-black/40">Paid</div><div className="mt-2 text-3xl font-black">{orders.filter((o) => o.payment_status === "paid").length}</div></div>
+                <div className="rounded-2xl bg-[#f7f6f3] p-5"><div className="text-xs font-black uppercase tracking-wider text-black/40">Pending payment</div><div className="mt-2 text-3xl font-black">{orders.filter((o) => o.payment_status === "pending" && o.order_status !== "cancelled").length}</div></div>
+              </div>
+            )}
+
+            {(ownerSection === "overview" || ownerSection === "products") && (
             <div className="mb-12 overflow-hidden rounded-3xl border border-black/5">
               <div className="flex items-center justify-between border-b p-5">
                 <div>
@@ -1261,7 +1329,9 @@ function App() {
                 </table>
               </div>
             </div>
+            )}
 
+            {(ownerSection === "overview" || ownerSection === "referrals") && (
             <div className="mb-12">
               <div className="mb-4">
                 <h3 className="text-xl font-black">Referral Program</h3>
@@ -1301,7 +1371,9 @@ function App() {
                 })}
               </div>
             </div>
+            )}
 
+            {(ownerSection === "overview" || ownerSection === "orders") && (
             <div>
               <div className="mb-4 flex items-end justify-between">
                 <div><h3 className="text-xl font-black">Customer Orders</h3><p className="text-sm text-black/40">Verify payments and move orders through the pipeline.</p></div>
@@ -1351,6 +1423,43 @@ function App() {
                 </div>
               )}
             </div>
+            )}
+
+            {ownerSection === "payments" && (
+              <div className="mt-12">
+                <div className="mb-4 flex items-end justify-between">
+                  <div>
+                    <h3 className="text-xl font-black">Payments</h3>
+                    <p className="text-sm text-black/40">Paid orders are listed here separately from customer orders.</p>
+                  </div>
+                  <button onClick={loadOrders} className="rounded-xl border px-3 py-2 text-xs font-black"><RefreshCw size={14} className="mr-1 inline" /> Refresh</button>
+                </div>
+
+                {orders.filter((order) => order.payment_status === "paid").length === 0 ? (
+                  <div className="rounded-2xl bg-[#f7f6f3] p-10 text-center text-sm text-black/40">No confirmed payments yet.</div>
+                ) : (
+                  <div className="overflow-x-auto rounded-2xl border">
+                    <table className="w-full min-w-[720px] text-left text-sm">
+                      <thead className="bg-[#fafafa] text-[10px] uppercase tracking-wider text-black/40">
+                        <tr><th className="p-4">Order</th><th className="p-4">Customer</th><th className="p-4">M-Pesa receipt</th><th className="p-4">Amount</th><th className="p-4">Status</th><th className="p-4">Date</th></tr>
+                      </thead>
+                      <tbody>
+                        {orders.filter((order) => order.payment_status === "paid").map((order) => (
+                          <tr key={order.id} className="border-t border-black/5">
+                            <td className="p-4 font-black">#{order.id.slice(0, 8)}</td>
+                            <td className="p-4"><div className="font-bold">{order.customer_name}</div><div className="text-xs text-black/40">{order.customer_phone}</div></td>
+                            <td className="p-4 font-black">{order.mpesa_receipt || "—"}</td>
+                            <td className="p-4 font-black">{money(order.total)}</td>
+                            <td className="p-4"><span className="rounded-full bg-green-100 px-3 py-1 text-[10px] font-black text-green-700">Paid</span></td>
+                            <td className="p-4 text-xs text-black/50">{order.created_at ? new Date(order.created_at).toLocaleString() : "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
       )}
