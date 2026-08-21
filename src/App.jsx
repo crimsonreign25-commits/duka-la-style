@@ -121,6 +121,7 @@ function App() {
 
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("");
+  const [ownerPasswordVisible, setOwnerPasswordVisible] = useState(false);
   const [showOwnerPassword, setShowOwnerPassword] = useState(false);
   const [ownerLoggedIn, setOwnerLoggedIn] = useState(false);
   const [ownerLoading, setOwnerLoading] = useState(false);
@@ -1605,7 +1606,25 @@ function App() {
             </div>
             <div className="space-y-4">
               <input type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="Owner email" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
-              <input type="password" value={ownerPassword} onChange={(e) => setOwnerPassword(e.target.value)} placeholder="Password" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
+              <div className="relative">
+                <input
+                  type={ownerPasswordVisible ? "text" : "password"}
+                  value={ownerPassword}
+                  onChange={(e) => setOwnerPassword(e.target.value)}
+                  placeholder="Password"
+                  className="w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setOwnerPasswordVisible((value) => !value)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-black/55 hover:bg-black/5"
+                  aria-label={ownerPasswordVisible ? "Hide password" : "Show password"}
+                  title={ownerPasswordVisible ? "Hide password" : "Show password"}
+                >
+                  {ownerPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               <button onClick={ownerLogin} disabled={ownerLoading} className="w-full rounded-xl bg-black py-3 text-sm font-black text-white">
                 <LogIn size={16} className="mr-2 inline" /> {ownerLoading ? "Logging in..." : "Login"}
               </button>
