@@ -115,6 +115,9 @@ function App() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [mpesaReceipt, setMpesaReceipt] = useState("");
+  const [stkLoading, setStkLoading] = useState(false);
+  const [stkSent, setStkSent] = useState(false);
+  const [stkMessage, setStkMessage] = useState("");
   const [referralCodeInput, setReferralCodeInput] = useState("");
   const [referralInfo, setReferralInfo] = useState(null);
   const [checkingReferral, setCheckingReferral] = useState(false);
@@ -412,10 +415,42 @@ function App() {
     }
   }
 
+  async function startMpesaPayment() {
+    if (!customerName.trim()) return setMessage("Please enter your name first.");
+    if (!customerPhone.trim()) return setMessage("Please enter your M-Pesa phone number.");
+    if (!cart.length) return setMessage("Your cart is empty.");
+
+    setStkLoading(true);
+    setStkMessage("");
+
+    try {
+      const response = await fetch("/api/mpesa/stkpush", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: customerPhone.trim(), amount: finalTotal }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not start M-Pesa payment.");
+
+      setStkSent(true);
+      setStkMessage(data.CustomerMessage || data.ResponseDescription || "M-Pesa payment request sent. Check your phone and enter your M-Pesa PIN.");
+      setMessage("M-Pesa payment prompt sent to your phone.");
+    } catch (error) {
+      console.error(error);
+      setStkSent(false);
+      setStkMessage("");
+      setMessage(error.message || "Could not start M-Pesa payment.");
+    } finally {
+      setStkLoading(false);
+    }
+  }
+
   async function placeOrder() {
     if (!customerName.trim()) return setMessage("Please enter your name.");
     if (!customerPhone.trim()) return setMessage("Please enter your phone number.");
-    if (!mpesaReceipt.trim()) return setMessage("Please enter your M-Pesa receipt.");
+    if (!stkSent) return setMessage("Please tap Pay with M-Pesa first.");
+    if (!mpesaReceipt.trim()) return setMessage("Enter the M-Pesa receipt after completing the payment.");
     if (!cart.length) return setMessage("Your cart is empty.");
 
     setOwnerLoading(true);
@@ -539,6 +574,8 @@ function App() {
       setCustomerName("");
       setCustomerPhone("");
       setMpesaReceipt("");
+      setStkSent(false);
+      setStkMessage("");
       setReferralCodeInput("");
       setReferralInfo(null);
 
@@ -1663,12 +1700,40 @@ function App() {
                 <div className="mt-1 text-xl font-black">{MPESA_NUMBER}</div>
               </div>
 
-              <input value={mpesaReceipt} onChange={(e) => setMpesaReceipt(e.target.value)} placeholder="M-Pesa transaction receipt" className="w-full rounded-xl border px-4 py-3 text-sm uppercase outline-none" />
-
-              <button onClick={placeOrder} disabled={ownerLoading} className="w-full rounded-2xl py-4 text-sm font-black disabled:opacity-50" style={{ background: theme.accent, color: "#111" }}>
-                {ownerLoading ? "Placing order..." : "Place order & WhatsApp"}
+              <button
+                onClick={startMpesaPayment}
+                disabled={stkLoading || ownerLoading}
+                className="w-full rounded-2xl py-4 text-sm font-black disabled:opacity-50"
+                style={{ background: theme.accent, color: "#111" }}
+              >
+                {stkLoading ? "Sending M-Pesa prompt..." : stkSent ? "M-Pesa prompt sent ✓" : `Pay ${money(finalTotal)} with M-Pesa`}
               </button>
-              <p className="text-center text-[10px] text-black/35">Your receipt will be sent with the order for owner verification.</p>
+
+              {stkMessage && (
+                <div className="rounded-2xl border p-4 text-sm">
+                  <div className="font-black">M-Pesa payment</div>
+                  <p className="mt-1 text-xs text-black/55">{stkMessage}</p>
+                </div>
+              )}
+
+              {stkSent && (
+                <>
+                  <input
+                    value={mpesaReceipt}
+                    onChange={(e) => setMpesaReceipt(e.target.value.toUpperCase())}
+                    placeholder="Enter M-Pesa receipt after payment"
+                    className="w-full rounded-xl border px-4 py-3 text-sm uppercase outline-none"
+                  />
+                  <button
+                    onClick={placeOrder}
+                    disabled={ownerLoading || !mpesaReceipt.trim()}
+                    className="w-full rounded-2xl bg-black py-4 text-sm font-black text-white disabled:opacity-50"
+                  >
+                    {ownerLoading ? "Submitting order..." : "Submit order for owner verification"}
+                  </button>
+                  <p className="text-center text-[10px] text-black/35">The receipt is shown to the owner for verification before the order is accepted.</p>
+                </>
+              )}
             </div>
           </div>
         </div>
