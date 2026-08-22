@@ -17,10 +17,18 @@ export default async function handler(req, res) {
     const shortcode = process.env.MPESA_SHORTCODE;
     const passkey = process.env.MPESA_PASSKEY;
     const callbackUrl = process.env.MPESA_CALLBACK_URL;
+    const consumerKey = process.env.MPESA_CONSUMER_KEY;
+    const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
 
     if (!shortcode || !passkey || !callbackUrl) {
       return res.status(500).json({
         error: "M-Pesa STK Push environment variables are missing.",
+      });
+    }
+
+    if (!consumerKey || !consumerSecret) {
+      return res.status(500).json({
+        error: "M-Pesa OAuth credentials are missing.",
       });
     }
 
@@ -65,24 +73,32 @@ export default async function handler(req, res) {
       `${shortcode}${passkey}${timestamp}`
     ).toString("base64");
 
-    // Get an OAuth token from our existing endpoint.
-    const baseUrl =
-      process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "https://duka-la-style.vercel.app";
+    // Call Safaricom OAuth directly (avoid calling our own /api/mpesa/token endpoint)
+    const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
 
-    const tokenResponse = await fetch(
-      `${baseUrl}/api/mpesa/token`
+    const oauthResponse = await fetch(
+      "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      }
     );
 
-    const tokenData = await tokenResponse.json();
+    const oauthText = await oauthResponse.text();
+    let oauthData;
+    try {
+      oauthData = JSON.parse(oauthText);
+    } catch {
+      oauthData = { raw: oauthText };
+    }
 
-    if (!tokenResponse.ok || !tokenData.access_token) {
-      console.error("Token endpoint error:", tokenData);
-
+    if (!oauthResponse.ok || !oauthData.access_token) {
+      console.error("Safaricom OAuth error:", oauthData);
       return res.status(500).json({
-        error: "Could not authenticate with M-Pesa.",
-        details: tokenData.error || "No access token returned.",
+        error: "Could not authenticate with M-Pesa (OAuth failed).",
+        details: oauthData.error || oauthData.errorMessage || oauthData.raw || "No access token returned.",
       });
     }
 
@@ -91,7 +107,7 @@ export default async function handler(req, res) {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${tokenData.access_token}`,
+          Authorization: `Bearer ${oauthData.access_token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
