@@ -130,6 +130,9 @@ function App() {
   const [showOwnerPassword, setShowOwnerPassword] = useState(false);
   const [ownerLoggedIn, setOwnerLoggedIn] = useState(false);
   const [ownerLoading, setOwnerLoading] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState(WHATSAPP_NUMBER);
+  const [whatsappInput, setWhatsappInput] = useState("");
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
 
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -215,6 +218,41 @@ function App() {
     if (!error) setReferralCodes(data || []);
   }
 
+  async function loadStoreSettings() {
+    const { data, error } = await supabase
+      .from("store_settings")
+      .select("whatsapp_number")
+      .eq("id", 1)
+      .maybeSingle();
+
+    if (!error && data?.whatsapp_number) {
+      setWhatsappNumber(data.whatsapp_number);
+      setWhatsappInput(data.whatsapp_number);
+    }
+  }
+
+  async function saveWhatsappNumber() {
+    const cleaned = whatsappInput.trim().replace(/[^0-9]/g, "");
+    if (!cleaned) return setMessage("Enter a valid WhatsApp number.");
+
+    setSavingWhatsapp(true);
+
+    const { error } = await supabase
+      .from("store_settings")
+      .update({ whatsapp_number: cleaned })
+      .eq("id", 1);
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setWhatsappNumber(cleaned);
+      setWhatsappInput(cleaned);
+      setMessage("WhatsApp number updated.");
+    }
+
+    setSavingWhatsapp(false);
+  }
+
   async function checkOwner() {
     const { data } = await supabase.auth.getSession();
     if (data.session) {
@@ -225,6 +263,7 @@ function App() {
 
   useEffect(() => {
     loadProducts();
+    loadStoreSettings();
     checkOwner();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -604,7 +643,7 @@ function App() {
       ].join("\n");
 
       const whatsappUrl =
-        `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
       setCart([]);
       setCartOpen(false);
@@ -1396,6 +1435,7 @@ function App() {
                 ["payments", "Payments"],
                 ["products", "Products"],
                 ["referrals", "Referrals"],
+                ["settings", "Settings"],
               ].map(([key, label]) => (
                 <button
                   key={key}
@@ -1612,6 +1652,42 @@ function App() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {ownerSection === "settings" && (
+              <div className="mt-12 max-w-lg">
+                <h3 className="text-xl font-black">Settings</h3>
+                <p className="text-sm text-black/40">Manage store-wide contact details.</p>
+
+                <div className="mt-6 rounded-2xl border border-black/5 p-6">
+                  <div className="flex items-center gap-2 font-black">
+                    <MessageCircle size={17} /> WhatsApp order number
+                  </div>
+                  <p className="mt-1 text-xs text-black/40">
+                    Customers are sent to this WhatsApp number to confirm their order after payment. Use the international format without a plus sign, e.g. 2547XXXXXXXX.
+                  </p>
+
+                  <input
+                    value={whatsappInput}
+                    onChange={(e) => setWhatsappInput(e.target.value)}
+                    placeholder="254710574821"
+                    className="mt-4 w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                  />
+
+                  <button
+                    onClick={saveWhatsappNumber}
+                    disabled={savingWhatsapp || whatsappInput.trim() === whatsappNumber}
+                    className="mt-3 w-full rounded-xl py-3 text-sm font-black disabled:opacity-40"
+                    style={{ background: theme.accent, color: "#111" }}
+                  >
+                    {savingWhatsapp ? "Saving..." : "Save WhatsApp number"}
+                  </button>
+
+                  <p className="mt-3 text-xs text-black/40">
+                    Current number: <strong>{whatsappNumber}</strong>
+                  </p>
+                </div>
               </div>
             )}
           </div>
