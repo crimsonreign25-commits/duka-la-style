@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ShoppingBag, Search, X, Plus, Minus, Trash2, Edit3, LogIn, LogOut,
@@ -133,6 +134,7 @@ function App() {
   const [whatsappNumber, setWhatsappNumber] = useState(WHATSAPP_NUMBER);
   const [whatsappInput, setWhatsappInput] = useState("");
   const [savingWhatsapp, setSavingWhatsapp] = useState(false);
+  const [storeSettingsId, setStoreSettingsId] = useState(null);
 
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -221,26 +223,30 @@ function App() {
   async function loadStoreSettings() {
     const { data, error } = await supabase
       .from("store_settings")
-      .select("whatsapp_number")
-      .eq("id", 1)
+      .select("id, whatsapp_number")
+      .limit(1)
       .maybeSingle();
 
-    if (!error && data?.whatsapp_number) {
-      setWhatsappNumber(data.whatsapp_number);
-      setWhatsappInput(data.whatsapp_number);
+    if (!error && data) {
+      setStoreSettingsId(data.id);
+      if (data.whatsapp_number) {
+        setWhatsappNumber(data.whatsapp_number);
+        setWhatsappInput(data.whatsapp_number);
+      }
     }
   }
 
   async function saveWhatsappNumber() {
     const cleaned = whatsappInput.trim().replace(/[^0-9]/g, "");
     if (!cleaned) return setMessage("Enter a valid WhatsApp number.");
+    if (!storeSettingsId) return setMessage("Store settings not loaded yet.");
 
     setSavingWhatsapp(true);
 
     const { error } = await supabase
       .from("store_settings")
-      .update({ whatsapp_number: cleaned })
-      .eq("id", 1);
+      .update({ whatsapp_number: cleaned, updated_at: new Date().toISOString() })
+      .eq("id", storeSettingsId);
 
     if (error) {
       setMessage(error.message);
