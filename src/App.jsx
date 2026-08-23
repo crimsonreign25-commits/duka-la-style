@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ShoppingBag, Search, X, Plus, Minus, Trash2, Edit3, LogIn, LogOut,
@@ -119,6 +118,8 @@ function App() {
   const [stkLoading, setStkLoading] = useState(false);
   const [stkSent, setStkSent] = useState(false);
   const [stkMessage, setStkMessage] = useState("");
+  const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
+  const [paymentCountdown, setPaymentCountdown] = useState(60);
   const [referralCodeInput, setReferralCodeInput] = useState("");
   const [referralInfo, setReferralInfo] = useState(null);
   const [checkingReferral, setCheckingReferral] = useState(false);
@@ -248,6 +249,16 @@ function App() {
     const timer = setInterval(loadOrders, 60 * 1000);
     return () => clearInterval(timer);
   }, [ownerLoggedIn]);
+
+  useEffect(() => {
+    if (!showPaymentConfirmation) return;
+    if (paymentCountdown <= 0) {
+      setShowPaymentConfirmation(false);
+      return;
+    }
+    const timer = setTimeout(() => setPaymentCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [showPaymentConfirmation, paymentCountdown]);
 
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -431,12 +442,38 @@ function App() {
         body: JSON.stringify({ phone: customerPhone.trim(), amount: finalTotal }),
       });
 
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Could not start M-Pesa payment.");
+      const raw = await response.text();
+      let data = {};
+
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        const looksLikeHtml = /<!doctype html|<html/i.test(raw);
+        throw new Error(
+          looksLikeHtml
+            ? `M-Pesa server returned an HTML error page (HTTP ${response.status}). Redeploy the API and make sure /api/mpesa/stkpush is deployed.`
+            : `M-Pesa server returned an invalid response (HTTP ${response.status}).`
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          data.errorMessage ||
+          data.ResponseDescription ||
+          "Could not start M-Pesa payment."
+        );
+      }
+
+      if (data.ResponseCode && String(data.ResponseCode) !== "0") {
+        throw new Error(data.ResponseDescription || "M-Pesa STK Push was not accepted.");
+      }
 
       setStkSent(true);
       setStkMessage(data.CustomerMessage || data.ResponseDescription || "M-Pesa payment request sent. Check your phone and enter your M-Pesa PIN.");
       setMessage("M-Pesa payment prompt sent to your phone.");
+      setPaymentCountdown(60);
+      setShowPaymentConfirmation(true);
     } catch (error) {
       console.error(error);
       setStkSent(false);
@@ -1703,7 +1740,7 @@ function App() {
 
               <button
                 onClick={startMpesaPayment}
-                disabled={stkLoading || ownerLoading}
+                disabled={stkLoading || ownerLoading || stkSent}
                 className="w-full rounded-2xl py-4 text-sm font-black disabled:opacity-50"
                 style={{ background: theme.accent, color: "#111" }}
               >
@@ -1737,6 +1774,93 @@ function App() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* PAYMENT CONFIRMATION OVERLAY */}
+      {showPaymentConfirmation && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
+          <div
+            className="relative w-full max-w-sm overflow-hidden rounded-[2rem] bg-white p-8 text-center shadow-2xl"
+            style={{ animation: "dls-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)" }}
+          >
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-1.5 origin-left"
+              style={{
+                background: theme.accent,
+                animation: `dls-shrink ${paymentCountdown}s linear forwards`,
+              }}
+            />
+
+            <div className="relative mx-auto mb-2 flex h-40 w-40 items-center justify-center">
+              <span
+                className="absolute h-28 w-28 rounded-full opacity-25"
+                style={{ background: theme.accent, animation: "dls-glow 2.4s ease-in-out infinite" }}
+              />
+              <svg viewBox="0 0 120 120" className="absolute h-full w-full -rotate-90">
+                <circle cx="60" cy="60" r="54" fill="none" stroke={theme.accentSoft} strokeWidth="5" />
+                <circle
+                  cx="60" cy="60" r="54" fill="none"
+                  stroke={theme.accent}
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray="339.3"
+                  style={{
+                    strokeDashoffset: 339.3 * (1 - paymentCountdown / 60),
+                    transition: "stroke-dashoffset 1s linear",
+                  }}
+                />
+              </svg>
+              <div
+                className="relative flex h-16 w-16 items-center justify-center rounded-full shadow-lg"
+                style={{ background: theme.accent }}
+              >
+                <CreditCard size={26} color="#111" />
+              </div>
+            </div>
+
+            <div className="text-2xl font-black" style={{ color: theme.accent }}>{paymentCountdown}s</div>
+
+            <div className="mt-4 text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>
+              Payment in progress
+            </div>
+            <h3 className="mt-2 text-xl font-black">Confirming your M-Pesa payment</h3>
+            <p className="mx-auto mt-2 max-w-[26rem] text-sm text-black/55">
+              Enter your M-Pesa PIN on your phone to complete the payment. Our team is verifying it on their end.
+            </p>
+
+            <div className="mt-6 flex items-center justify-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite" }} />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite", animationDelay: "0.2s" }} />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite", animationDelay: "0.4s" }} />
+            </div>
+
+            <button
+              onClick={() => setShowPaymentConfirmation(false)}
+              className="mt-6 text-xs font-bold text-black/40 underline underline-offset-2"
+            >
+              I've completed payment — enter receipt now
+            </button>
+          </div>
+
+          <style>{`
+            @keyframes dls-pop {
+              from { opacity: 0; transform: scale(0.92); }
+              to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes dls-glow {
+              0%, 100% { transform: scale(0.85); opacity: 0.15; }
+              50% { transform: scale(1.15); opacity: 0.35; }
+            }
+            @keyframes dls-dot {
+              0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+              40% { transform: scale(1); opacity: 1; }
+            }
+            @keyframes dls-shrink {
+              from { transform: scaleX(1); }
+              to { transform: scaleX(0); }
+            }
+          `}</style>
         </div>
       )}
 
