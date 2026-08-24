@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ShoppingBag, Search, X, Plus, Minus, Trash2, Edit3, LogIn, LogOut,
@@ -82,6 +81,18 @@ function money(value) {
   return `KSh ${Number(value || 0).toLocaleString()}`;
 }
 
+const COUNTDOWN_UNIT_SECONDS = { seconds: 1, minutes: 60, hours: 3600 };
+
+function secondsToBestUnit(totalSeconds) {
+  if (totalSeconds > 0 && totalSeconds % 3600 === 0) {
+    return { value: totalSeconds / 3600, unit: "hours" };
+  }
+  if (totalSeconds > 0 && totalSeconds % 60 === 0) {
+    return { value: totalSeconds / 60, unit: "minutes" };
+  }
+  return { value: totalSeconds, unit: "seconds" };
+}
+
 function makeReferralCode(name) {
   const clean = name.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
   return `${clean || "BALEKING"}${Math.floor(1000 + Math.random() * 9000)}`;
@@ -121,6 +132,10 @@ function App() {
   const [stkMessage, setStkMessage] = useState("");
   const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
   const [paymentCountdown, setPaymentCountdown] = useState(60);
+  const [paymentCountdownDuration, setPaymentCountdownDuration] = useState(60);
+  const [countdownInput, setCountdownInput] = useState("");
+  const [countdownUnit, setCountdownUnit] = useState("seconds");
+  const [savingCountdown, setSavingCountdown] = useState(false);
   const [referralCodeInput, setReferralCodeInput] = useState("");
   const [referralInfo, setReferralInfo] = useState(null);
   const [checkingReferral, setCheckingReferral] = useState(false);
@@ -223,7 +238,7 @@ function App() {
   async function loadStoreSettings() {
     const { data, error } = await supabase
       .from("store_settings")
-      .select("id, whatsapp_number")
+      .select("id, whatsapp_number, payment_countdown_seconds")
       .limit(1)
       .maybeSingle();
 
@@ -232,6 +247,12 @@ function App() {
       if (data.whatsapp_number) {
         setWhatsappNumber(data.whatsapp_number);
         setWhatsappInput(data.whatsapp_number);
+      }
+      if (data.payment_countdown_seconds) {
+        setPaymentCountdownDuration(data.payment_countdown_seconds);
+        const best = secondsToBestUnit(data.payment_countdown_seconds);
+        setCountdownInput(String(best.value));
+        setCountdownUnit(best.unit);
       }
     }
   }
@@ -257,6 +278,36 @@ function App() {
     }
 
     setSavingWhatsapp(false);
+  }
+
+  async function saveCountdownDuration() {
+    const rawValue = parseFloat(countdownInput);
+    if (!rawValue || rawValue <= 0) {
+      return setMessage("Enter a duration greater than 0.");
+    }
+
+    const seconds = Math.round(rawValue * COUNTDOWN_UNIT_SECONDS[countdownUnit]);
+
+    if (seconds < 5 || seconds > 21600) {
+      return setMessage("Duration must be between 5 seconds and 6 hours.");
+    }
+    if (!storeSettingsId) return setMessage("Store settings not loaded yet.");
+
+    setSavingCountdown(true);
+
+    const { error } = await supabase
+      .from("store_settings")
+      .update({ payment_countdown_seconds: seconds, updated_at: new Date().toISOString() })
+      .eq("id", storeSettingsId);
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setPaymentCountdownDuration(seconds);
+      setMessage("Payment confirmation duration updated.");
+    }
+
+    setSavingCountdown(false);
   }
 
   async function checkOwner() {
@@ -517,7 +568,7 @@ function App() {
       setStkSent(true);
       setStkMessage(data.CustomerMessage || data.ResponseDescription || "M-Pesa payment request sent. Check your phone and enter your M-Pesa PIN.");
       setMessage("M-Pesa payment prompt sent to your phone.");
-      setPaymentCountdown(60);
+      setPaymentCountdown(paymentCountdownDuration);
       setShowPaymentConfirmation(true);
     } catch (error) {
       console.error(error);
@@ -1694,6 +1745,59 @@ function App() {
                     Current number: <strong>{whatsappNumber}</strong>
                   </p>
                 </div>
+
+                <div className="mt-6 rounded-2xl border border-black/5 p-6">
+                  <div className="flex items-center gap-2 font-black">
+                    <CreditCard size={17} /> Payment confirmation duration
+                  </div>
+                  <p className="mt-1 text-xs text-black/40">
+                    How long the "Confirming your payment" screen counts down after a customer taps Pay, before they can move on to enter their receipt. Between 5 seconds and 6 hours.
+                  </p>
+
+                  <div className="mt-4 flex gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={countdownInput}
+                      onChange={(e) => setCountdownInput(e.target.value)}
+                      placeholder="60"
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                    />
+                    <select
+                      value={countdownUnit}
+                      onChange={(e) => setCountdownUnit(e.target.value)}
+                      className="rounded-xl border px-3 py-3 text-sm outline-none"
+                    >
+                      <option value="seconds">Seconds</option>
+                      <option value="minutes">Minutes</option>
+                      <option value="hours">Hours</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={saveCountdownDuration}
+                    disabled={
+                      savingCountdown ||
+                      Math.round(parseFloat(countdownInput || "0") * COUNTDOWN_UNIT_SECONDS[countdownUnit]) === paymentCountdownDuration
+                    }
+                    className="mt-3 w-full rounded-xl py-3 text-sm font-black disabled:opacity-40"
+                    style={{ background: theme.accent, color: "#111" }}
+                  >
+                    {savingCountdown ? "Saving..." : "Save duration"}
+                  </button>
+
+                  <p className="mt-3 text-xs text-black/40">
+                    Current duration:{" "}
+                    <strong>
+                      {(() => {
+                        const best = secondsToBestUnit(paymentCountdownDuration);
+                        return `${best.value} ${best.unit}`;
+                      })()}
+                    </strong>{" "}
+                    ({paymentCountdownDuration}s)
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -1888,7 +1992,7 @@ function App() {
                   strokeLinecap="round"
                   strokeDasharray="339.3"
                   style={{
-                    strokeDashoffset: 339.3 * (1 - paymentCountdown / 60),
+                    strokeDashoffset: 339.3 * (1 - paymentCountdown / paymentCountdownDuration),
                     transition: "stroke-dashoffset 1s linear",
                   }}
                 />
