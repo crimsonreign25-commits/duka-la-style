@@ -2016,15 +2016,25 @@ function App() {
               <p className="mt-2 max-w-md text-sm leading-6 text-white/40">
                 Where style meets elegance. A premium fashion experience for men, women and children.
               </p>
-              <a
-                href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi Baleking, I have a question.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-black"
-                style={{ background: theme.accent, color: "#111" }}
-              >
-                <MessageCircle size={15} /> Chat with us
-              </a>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a
+                  href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi Baleking, I have a question.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-black"
+                  style={{ background: theme.accent, color: "#111" }}
+                >
+                  <MessageCircle size={15} /> Chat with us
+                </a>
+                {contactNumber && (
+                  <a
+                    href={`tel:${contactNumber}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-xs font-black text-white"
+                  >
+                    <Phone size={15} /> Contact us
+                  </a>
+                )}
+              </div>
             </div>
             <div>
               <div className="text-xs font-black uppercase tracking-wider" style={{ color: theme.accent }}>Explore</div>
