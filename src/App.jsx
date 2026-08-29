@@ -126,6 +126,13 @@ function App() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [pickupPoints, setPickupPoints] = useState([]);
+  const [pickupSearch, setPickupSearch] = useState("");
+  const [selectedPickupPoint, setSelectedPickupPoint] = useState(null);
+  const [newPickupName, setNewPickupName] = useState("");
+  const [newPickupArea, setNewPickupArea] = useState("");
+  const [newPickupAddress, setNewPickupAddress] = useState("");
+  const [savingPickupPoint, setSavingPickupPoint] = useState(false);
   const [mpesaReceipt, setMpesaReceipt] = useState("");
   const [stkLoading, setStkLoading] = useState(false);
   const [stkSent, setStkSent] = useState(false);
@@ -149,6 +156,9 @@ function App() {
   const [whatsappNumber, setWhatsappNumber] = useState(WHATSAPP_NUMBER);
   const [whatsappInput, setWhatsappInput] = useState("");
   const [savingWhatsapp, setSavingWhatsapp] = useState(false);
+  const [contactNumber, setContactNumber] = useState("");
+  const [contactNumberInput, setContactNumberInput] = useState("");
+  const [savingContactNumber, setSavingContactNumber] = useState(false);
   const [storeSettingsId, setStoreSettingsId] = useState(null);
 
   const [productFormOpen, setProductFormOpen] = useState(false);
@@ -235,10 +245,70 @@ function App() {
     if (!error) setReferralCodes(data || []);
   }
 
+  async function loadPickupPoints() {
+    const { data, error } = await supabase
+      .from("pickup_points")
+      .select("*")
+      .order("area", { ascending: true });
+
+    if (!error) setPickupPoints(data || []);
+  }
+
+  async function addPickupPoint() {
+    if (!newPickupName.trim() || !newPickupArea.trim()) {
+      return setMessage("Enter at least a name and area for the pickup point.");
+    }
+
+    setSavingPickupPoint(true);
+
+    const { error } = await supabase.from("pickup_points").insert({
+      name: newPickupName.trim(),
+      area: newPickupArea.trim(),
+      address: newPickupAddress.trim() || null,
+    });
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setNewPickupName("");
+      setNewPickupArea("");
+      setNewPickupAddress("");
+      setMessage("Pickup point added.");
+      await loadPickupPoints();
+    }
+
+    setSavingPickupPoint(false);
+  }
+
+  async function deletePickupPoint(point) {
+    if (!window.confirm(`Remove "${point.name}"?`)) return;
+
+    const { error } = await supabase
+      .from("pickup_points")
+      .delete()
+      .eq("id", point.id);
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setMessage("Pickup point removed.");
+      await loadPickupPoints();
+    }
+  }
+
+  async function togglePickupPointActive(point) {
+    const { error } = await supabase
+      .from("pickup_points")
+      .update({ is_active: !point.is_active })
+      .eq("id", point.id);
+
+    if (!error) await loadPickupPoints();
+  }
+
   async function loadStoreSettings() {
     const { data, error } = await supabase
       .from("store_settings")
-      .select("id, whatsapp_number, payment_countdown_seconds")
+      .select("id, whatsapp_number, payment_countdown_seconds, contact_number")
       .limit(1)
       .maybeSingle();
 
@@ -253,6 +323,10 @@ function App() {
         const best = secondsToBestUnit(data.payment_countdown_seconds);
         setCountdownInput(String(best.value));
         setCountdownUnit(best.unit);
+      }
+      if (data.contact_number) {
+        setContactNumber(data.contact_number);
+        setContactNumberInput(data.contact_number);
       }
     }
   }
@@ -278,6 +352,29 @@ function App() {
     }
 
     setSavingWhatsapp(false);
+  }
+
+  async function saveContactNumber() {
+    const cleaned = contactNumberInput.trim().replace(/[^0-9+]/g, "");
+    if (!cleaned) return setMessage("Enter a valid contact number.");
+    if (!storeSettingsId) return setMessage("Store settings not loaded yet.");
+
+    setSavingContactNumber(true);
+
+    const { error } = await supabase
+      .from("store_settings")
+      .update({ contact_number: cleaned, updated_at: new Date().toISOString() })
+      .eq("id", storeSettingsId);
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setContactNumber(cleaned);
+      setContactNumberInput(cleaned);
+      setMessage("Contact number updated.");
+    }
+
+    setSavingContactNumber(false);
   }
 
   async function saveCountdownDuration() {
@@ -321,6 +418,7 @@ function App() {
   useEffect(() => {
     loadProducts();
     loadStoreSettings();
+    loadPickupPoints();
     checkOwner();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -385,6 +483,17 @@ function App() {
       return matchesSearch && matchesGender && matchesAge && matchesStyle && matchesCategory;
     });
   }, [products, search, genderFilter, ageFilter, styleFilter, category]);
+
+  const filteredPickupPoints = useMemo(() => {
+    const term = pickupSearch.trim().toLowerCase();
+    const active = pickupPoints.filter((p) => p.is_active);
+
+    if (!term) return active;
+
+    return active.filter((p) =>
+      [p.name, p.area, p.address].some((v) => String(v || "").toLowerCase().includes(term))
+    );
+  }, [pickupPoints, pickupSearch]);
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cart.reduce(
@@ -712,6 +821,7 @@ function App() {
       setStkMessage("");
       setReferralCodeInput("");
       setReferralInfo(null);
+      setPickupSearch("");
 
       setMessage("Order placed successfully. Opening WhatsApp...");
       window.open(whatsappUrl, "_blank");
@@ -1622,6 +1732,7 @@ function App() {
                             <div><User size={14} className="mr-1 inline" /> {order.customer_name}</div>
                             <div><Phone size={14} className="mr-1 inline" /> {order.customer_phone}</div>
                             <div className="font-black">Total: {money(order.total)}</div>
+                            {order.pickup_point && <div>Pickup: <strong>{order.pickup_point}</strong></div>}
                             <div>M-Pesa receipt: <strong>{order.mpesa_receipt || "Not provided"}</strong></div>
                             {order.referral_code && <div>Referral: <strong>{order.referral_code}</strong></div>}
                           </div>
@@ -1679,6 +1790,7 @@ function App() {
                               <div><Phone size={14} className="mr-1 inline" /> {order.customer_phone}</div>
                               <div className="font-black">Amount: {money(order.total)}</div>
                               <div>Order: <strong>{order.order_status}</strong></div>
+                              {order.pickup_point && <div className="sm:col-span-2">Pickup: <strong>{order.pickup_point}</strong></div>}
                             </div>
                             <div className="mt-4 rounded-xl bg-white p-4">
                               <div className="text-[10px] font-black uppercase tracking-wider text-black/40">M-Pesa receipt</div>
@@ -1748,6 +1860,35 @@ function App() {
 
                 <div className="mt-6 rounded-2xl border border-black/5 p-6">
                   <div className="flex items-center gap-2 font-black">
+                    <Phone size={17} /> Contact us number
+                  </div>
+                  <p className="mt-1 text-xs text-black/40">
+                    A separate phone number customers can call directly — shown at checkout alongside the WhatsApp option. Include the country code, e.g. 254710574821.
+                  </p>
+
+                  <input
+                    value={contactNumberInput}
+                    onChange={(e) => setContactNumberInput(e.target.value)}
+                    placeholder="254710574821"
+                    className="mt-4 w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                  />
+
+                  <button
+                    onClick={saveContactNumber}
+                    disabled={savingContactNumber || contactNumberInput.trim() === contactNumber}
+                    className="mt-3 w-full rounded-xl py-3 text-sm font-black disabled:opacity-40"
+                    style={{ background: theme.accent, color: "#111" }}
+                  >
+                    {savingContactNumber ? "Saving..." : "Save contact number"}
+                  </button>
+
+                  <p className="mt-3 text-xs text-black/40">
+                    Current number: <strong>{contactNumber || "Not set"}</strong>
+                  </p>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-black/5 p-6">
+                  <div className="flex items-center gap-2 font-black">
                     <CreditCard size={17} /> Payment confirmation duration
                   </div>
                   <p className="mt-1 text-xs text-black/40">
@@ -1798,6 +1939,68 @@ function App() {
                     ({paymentCountdownDuration}s)
                   </p>
                 </div>
+
+                <div className="mt-6 rounded-2xl border border-black/5 p-6">
+                  <div className="flex items-center gap-2 font-black">
+                    <Package size={17} /> Pickup points
+                  </div>
+                  <p className="mt-1 text-xs text-black/40">
+                    Add the locations customers can pick up their orders from. They'll search by area name at checkout.
+                  </p>
+
+                  <div className="mt-4 space-y-3">
+                    <input
+                      value={newPickupName}
+                      onChange={(e) => setNewPickupName(e.target.value)}
+                      placeholder="Pickup point name (e.g. Baleking Kilimani Shop)"
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                    />
+                    <input
+                      value={newPickupArea}
+                      onChange={(e) => setNewPickupArea(e.target.value)}
+                      placeholder="Area (e.g. Kilimani)"
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                    />
+                    <input
+                      value={newPickupAddress}
+                      onChange={(e) => setNewPickupAddress(e.target.value)}
+                      placeholder="Address / landmark (optional)"
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                    />
+                    <button
+                      onClick={addPickupPoint}
+                      disabled={savingPickupPoint}
+                      className="w-full rounded-xl py-3 text-sm font-black disabled:opacity-40"
+                      style={{ background: theme.accent, color: "#111" }}
+                    >
+                      {savingPickupPoint ? "Adding..." : "Add pickup point"}
+                    </button>
+                  </div>
+
+                  <div className="mt-6 space-y-2">
+                    {pickupPoints.length === 0 && (
+                      <p className="text-xs text-black/40">No pickup points added yet.</p>
+                    )}
+                    {pickupPoints.map((point) => (
+                      <div key={point.id} className="flex items-center justify-between rounded-xl border p-3">
+                        <div>
+                          <div className="text-sm font-black">
+                            {point.name} {!point.is_active && <span className="text-black/30">(hidden)</span>}
+                          </div>
+                          <div className="text-xs text-black/50">{point.area}{point.address ? ` · ${point.address}` : ""}</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => togglePickupPointActive(point)} className="rounded-lg border p-2" title={point.is_active ? "Hide from customers" : "Show to customers"}>
+                            {point.is_active ? <Eye size={15} /> : <EyeOff size={15} />}
+                          </button>
+                          <button onClick={() => deletePickupPoint(point)} className="rounded-lg border p-2 text-red-600">
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -1813,6 +2016,15 @@ function App() {
               <p className="mt-2 max-w-md text-sm leading-6 text-white/40">
                 Where style meets elegance. A premium fashion experience for men, women and children.
               </p>
+              <a
+                href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi Baleking, I have a question.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-black"
+                style={{ background: theme.accent, color: "#111" }}
+              >
+                <MessageCircle size={15} /> Chat with us
+              </a>
             </div>
             <div>
               <div className="text-xs font-black uppercase tracking-wider" style={{ color: theme.accent }}>Explore</div>
@@ -1895,6 +2107,32 @@ function App() {
             <div className="space-y-4">
               <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Your name" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
               <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Phone number" className="w-full rounded-xl border px-4 py-3 text-sm outline-none" />
+
+              <div className="rounded-2xl border p-4 text-sm">
+                <div className="font-black">Need delivery details?</div>
+                <p className="mt-1 text-xs text-black/40">
+                  For more information on delivery location, fee and timing, chat with us on WhatsApp or contact us directly.
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <a
+                    href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi Baleking, I'd like to arrange delivery for my order.")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-black"
+                    style={{ background: theme.accent, color: "#111" }}
+                  >
+                    <MessageCircle size={14} /> Chat on WhatsApp
+                  </a>
+                  {contactNumber && (
+                    <a
+                      href={`tel:${contactNumber}`}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-black"
+                    >
+                      <Phone size={14} /> Call {contactNumber}
+                    </a>
+                  )}
+                </div>
+              </div>
 
               <div className="rounded-2xl border p-4">
                 <div className="font-black"><Gift size={17} className="mr-2 inline" /> Referral reward</div>
