@@ -6,6 +6,7 @@ import {
   Crown, Shirt, Baby, BriefcaseBusiness, Tags, Star, SlidersHorizontal, Eye, EyeOff
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
+import { Analytics } from "@vercel/analytics/react";
 
 /* =========================================================
    BALEKING — PREMIUM STORE
@@ -494,6 +495,37 @@ function App() {
       [p.name, p.area, p.address].some((v) => String(v || "").toLowerCase().includes(term))
     );
   }, [pickupPoints, pickupSearch]);
+
+  const salesInsights = useMemo(() => {
+    const paidOrders = orders.filter((o) => o.payment_status === "paid");
+
+    const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    const totalSales = paidOrders.length;
+    const avgOrderValue = totalSales ? totalRevenue / totalSales : 0;
+
+    const productTotals = {};
+    paidOrders.forEach((order) => {
+      (order.order_items || []).forEach((item) => {
+        const key = item.product_name || "Unknown item";
+        if (!productTotals[key]) {
+          productTotals[key] = { name: key, quantity: 0, revenue: 0 };
+        }
+        productTotals[key].quantity += Number(item.quantity || 0);
+        productTotals[key].revenue += Number(item.price || 0) * Number(item.quantity || 0);
+      });
+    });
+
+    const topProducts = Object.values(productTotals).sort((a, b) => b.quantity - a.quantity);
+
+    const dayTotals = {};
+    paidOrders.forEach((order) => {
+      if (!order.created_at) return;
+      const day = new Date(order.created_at).toLocaleDateString("en-KE", { month: "short", day: "numeric" });
+      dayTotals[day] = (dayTotals[day] || 0) + Number(order.total || 0);
+    });
+
+    return { totalRevenue, totalSales, avgOrderValue, topProducts, dayTotals };
+  }, [orders]);
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cart.reduce(
@@ -1598,6 +1630,7 @@ function App() {
             <div className="mb-8 flex flex-wrap gap-2 rounded-2xl bg-[#f7f6f3] p-2">
               {[
                 ["overview", "Overview"],
+                ["insights", "Insights"],
                 ["orders", "Orders"],
                 ["payments", "Payments"],
                 ["products", "Products"],
@@ -1620,6 +1653,71 @@ function App() {
                 <div className="rounded-2xl bg-[#f7f6f3] p-5"><div className="text-xs font-black uppercase tracking-wider text-black/40">Orders</div><div className="mt-2 text-3xl font-black">{orders.length}</div></div>
                 <div className="rounded-2xl bg-[#f7f6f3] p-5"><div className="text-xs font-black uppercase tracking-wider text-black/40">Paid</div><div className="mt-2 text-3xl font-black">{orders.filter((o) => o.payment_status === "paid").length}</div></div>
                 <div className="rounded-2xl bg-[#f7f6f3] p-5"><div className="text-xs font-black uppercase tracking-wider text-black/40">Pending payment</div><div className="mt-2 text-3xl font-black">{orders.filter((o) => o.payment_status === "pending" && o.order_status !== "cancelled").length}</div></div>
+              </div>
+            )}
+
+            {ownerSection === "insights" && (
+              <div className="mb-12">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="rounded-2xl bg-[#f7f6f3] p-5">
+                    <div className="text-xs font-black uppercase tracking-wider text-black/40">Total revenue</div>
+                    <div className="mt-2 text-3xl font-black">{money(salesInsights.totalRevenue)}</div>
+                  </div>
+                  <div className="rounded-2xl bg-[#f7f6f3] p-5">
+                    <div className="text-xs font-black uppercase tracking-wider text-black/40">Completed sales</div>
+                    <div className="mt-2 text-3xl font-black">{salesInsights.totalSales}</div>
+                  </div>
+                  <div className="rounded-2xl bg-[#f7f6f3] p-5">
+                    <div className="text-xs font-black uppercase tracking-wider text-black/40">Average order value</div>
+                    <div className="mt-2 text-3xl font-black">{money(salesInsights.avgOrderValue)}</div>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <h3 className="text-lg font-black">Best-selling products</h3>
+                  <p className="text-xs text-black/40">Ranked by units sold, based on confirmed (paid) orders only.</p>
+
+                  {salesInsights.topProducts.length === 0 ? (
+                    <p className="mt-4 text-sm text-black/40">No confirmed sales yet.</p>
+                  ) : (
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-black/5">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr>
+                            <th className="p-3 text-left">Product</th>
+                            <th className="p-3 text-right">Units sold</th>
+                            <th className="p-3 text-right">Revenue</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {salesInsights.topProducts.map((p, i) => (
+                            <tr key={p.name} className="border-t border-black/5">
+                              <td className="p-3 font-black">
+                                {i === 0 && "🔥 "}{p.name}
+                              </td>
+                              <td className="p-3 text-right">{p.quantity}</td>
+                              <td className="p-3 text-right">{money(p.revenue)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {Object.keys(salesInsights.dayTotals).length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-black">Revenue by day</h3>
+                    <div className="mt-4 space-y-2">
+                      {Object.entries(salesInsights.dayTotals).map(([day, total]) => (
+                        <div key={day} className="flex items-center justify-between rounded-xl bg-[#f7f6f3] px-4 py-2.5 text-sm">
+                          <span className="font-black">{day}</span>
+                          <span>{money(total)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -2423,6 +2521,7 @@ function App() {
           </div>
         </div>
       )}
+      <Analytics />
     </div>
   );
 }
