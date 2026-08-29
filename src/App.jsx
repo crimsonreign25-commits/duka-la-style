@@ -2138,7 +2138,7 @@ function App() {
                       href={`tel:${contactNumber}`}
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-black"
                     >
-                      <Phone size={14} /> Call {contactNumber}
+                      <Phone size={14} /> Call us
                     </a>
                   )}
                 </div>
