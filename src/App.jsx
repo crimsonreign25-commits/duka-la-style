@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 /* =========================================================
    BALEKING — PREMIUM STORE
@@ -2522,6 +2523,7 @@ function App() {
         </div>
       )}
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
