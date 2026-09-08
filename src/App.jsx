@@ -134,11 +134,16 @@ function App() {
   const [newPickupArea, setNewPickupArea] = useState("");
   const [newPickupAddress, setNewPickupAddress] = useState("");
   const [savingPickupPoint, setSavingPickupPoint] = useState(false);
-  const [mpesaReceipt, setMpesaReceipt] = useState("");
   const [stkLoading, setStkLoading] = useState(false);
   const [stkSent, setStkSent] = useState(false);
   const [stkMessage, setStkMessage] = useState("");
   const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
+  // CHANGED: mpesaReceipt (manually typed by the customer) is gone —
+  // the Safaricom callback is now the only source of a receipt number.
+  // These track the order created for this checkout attempt so we can
+  // poll /api/mpesa/status for the automatic verification result.
+  const [pendingOrderId, setPendingOrderId] = useState(null);
+  const [paymentVerification, setPaymentVerification] = useState(null);
   const [paymentCountdown, setPaymentCountdown] = useState(60);
   const [paymentCountdownDuration, setPaymentCountdownDuration] = useState(60);
   const [countdownInput, setCountdownInput] = useState("");
@@ -447,13 +452,52 @@ function App() {
 
   useEffect(() => {
     if (!showPaymentConfirmation) return;
-    if (paymentCountdown <= 0) {
-      setShowPaymentConfirmation(false);
-      return;
-    }
+    if (paymentCountdown <= 0) return;
     const timer = setTimeout(() => setPaymentCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [showPaymentConfirmation, paymentCountdown]);
+
+  // NEW: while the confirmation overlay is open, poll the order's
+  // automatic verification result every few seconds. This is what
+  // replaces the customer manually typing a receipt — the Safaricom
+  // callback (processed server-side) is the only thing that can move
+  // this status forward.
+  useEffect(() => {
+    if (!showPaymentConfirmation || !pendingOrderId) return;
+
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const response = await fetch(`/api/mpesa/status?orderId=${pendingOrderId}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (cancelled) return;
+
+        setPaymentVerification(data);
+
+        const settled = [
+          "valid_awaiting_owner",
+          "invalid",
+          "amount_mismatch",
+          "phone_mismatch",
+        ].includes(data.verification_status);
+
+        if (settled) {
+          if (ownerLoggedIn) loadOrders();
+        }
+      } catch (error) {
+        console.error("Status poll failed:", error);
+      }
+    }
+
+    poll();
+    const interval = setInterval(poll, 4000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [showPaymentConfirmation, pendingOrderId, ownerLoggedIn]);
 
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -664,8 +708,13 @@ function App() {
     }
   }
 
-  async function startMpesaPayment() {
-    if (!customerName.trim()) return setMessage("Please enter your name first.");
+  // CHANGED: this function used to be split into startMpesaPayment
+  // (send STK push) and placeOrder (create the order, gated on a
+  // manually-typed receipt). The order now has to exist BEFORE the
+  // STK push is sent, so the Safaricom callback has something to
+  // match against — so both steps are combined here, in that order.
+  async function submitOrderAndPay() {
+    if (!customerName.trim()) return setMessage("Please enter your name.");
     if (!customerPhone.trim()) return setMessage("Please enter your M-Pesa phone number.");
     if (!cart.length) return setMessage("Your cart is empty.");
 
@@ -673,64 +722,7 @@ function App() {
     setStkMessage("");
 
     try {
-      const response = await fetch("/api/mpesa/stkpush", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: customerPhone.trim(), amount: finalTotal }),
-      });
-
-      const raw = await response.text();
-      let data = {};
-
-      try {
-        data = raw ? JSON.parse(raw) : {};
-      } catch {
-        const looksLikeHtml = /<!doctype html|<html/i.test(raw);
-        throw new Error(
-          looksLikeHtml
-            ? `M-Pesa server returned an HTML error page (HTTP ${response.status}). Redeploy the API and make sure /api/mpesa/stkpush is deployed.`
-            : `M-Pesa server returned an invalid response (HTTP ${response.status}).`
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data.error ||
-          data.errorMessage ||
-          data.ResponseDescription ||
-          "Could not start M-Pesa payment."
-        );
-      }
-
-      if (data.ResponseCode && String(data.ResponseCode) !== "0") {
-        throw new Error(data.ResponseDescription || "M-Pesa STK Push was not accepted.");
-      }
-
-      setStkSent(true);
-      setStkMessage(data.CustomerMessage || data.ResponseDescription || "M-Pesa payment request sent. Check your phone and enter your M-Pesa PIN.");
-      setMessage("M-Pesa payment prompt sent to your phone.");
-      setPaymentCountdown(paymentCountdownDuration);
-      setShowPaymentConfirmation(true);
-    } catch (error) {
-      console.error(error);
-      setStkSent(false);
-      setStkMessage("");
-      setMessage(error.message || "Could not start M-Pesa payment.");
-    } finally {
-      setStkLoading(false);
-    }
-  }
-
-  async function placeOrder() {
-    if (!customerName.trim()) return setMessage("Please enter your name.");
-    if (!customerPhone.trim()) return setMessage("Please enter your phone number.");
-    if (!stkSent) return setMessage("Please tap Pay with M-Pesa first.");
-    if (!mpesaReceipt.trim()) return setMessage("Enter the M-Pesa receipt after completing the payment.");
-    if (!cart.length) return setMessage("Your cart is empty.");
-
-    setOwnerLoading(true);
-
-    try {
+      // --- 1. Resolve referral (unchanged logic, just moved earlier) ---
       let verifiedReferral = null;
       let verifiedDiscount = 0;
 
@@ -766,15 +758,18 @@ function App() {
 
       const orderTotal = Math.max(0, cartSubtotal - verifiedDiscount);
 
+      // --- 2. Create the order FIRST, as "pending", with no receipt.
+      // The receipt/verification fields are filled in later by the
+      // Safaricom callback, not by the customer. ---
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           customer_name: customerName.trim(),
           customer_phone: customerPhone.trim(),
           total: orderTotal,
+          subtotal: cartSubtotal,
           payment_status: "pending",
           order_status: "new",
-          mpesa_receipt: mpesaReceipt.trim(),
           referred_by: verifiedReferral?.owner_name || null,
           referral_code: verifiedReferral?.code || null,
           referral_discount: verifiedDiscount,
@@ -819,6 +814,43 @@ function App() {
           .eq("id", verifiedReferral.id);
       }
 
+      // --- 3. Now trigger the STK push against that order. ---
+      const response = await fetch("/api/mpesa/stkpush", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+
+      const raw = await response.text();
+      let data = {};
+
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        const looksLikeHtml = /<!doctype html|<html/i.test(raw);
+        throw new Error(
+          looksLikeHtml
+            ? `M-Pesa server returned an HTML error page (HTTP ${response.status}). Redeploy the API and make sure /api/mpesa/stkpush is deployed.`
+            : `M-Pesa server returned an invalid response (HTTP ${response.status}).`
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          data.errorMessage ||
+          data.ResponseDescription ||
+          "Could not start M-Pesa payment."
+        );
+      }
+
+      if (data.ResponseCode && String(data.ResponseCode) !== "0") {
+        throw new Error(data.ResponseDescription || "M-Pesa STK Push was not accepted.");
+      }
+
+      // --- 4. STK push accepted — send the WhatsApp notification now
+      // (order + payment attempt both exist), then show the
+      // verification overlay. ---
       const whatsappMessage = [
         "Hello Baleking 👋",
         "",
@@ -834,37 +866,51 @@ function App() {
         `SUBTOTAL: ${money(cartSubtotal)}`,
         `REFERRAL DISCOUNT: ${verifiedDiscount ? "-" + money(verifiedDiscount) : "KSh 0"}`,
         `TOTAL TO PAY: ${money(orderTotal)}`,
-        `M-Pesa Receipt: ${mpesaReceipt.trim()}`,
+        "An M-Pesa prompt has been sent — payment will be verified automatically.",
         verifiedReferral ? `Referral Code: ${verifiedReferral.code}` : "Referral Code: None",
-        "",
-        "Please confirm my order.",
       ].join("\n");
 
       const whatsappUrl =
         `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
-      setCart([]);
+      setStkSent(true);
+      setPendingOrderId(order.id);
+      setPaymentVerification(null);
+      setStkMessage(data.CustomerMessage || data.ResponseDescription || "M-Pesa payment request sent. Check your phone and enter your M-Pesa PIN.");
+      setPaymentCountdown(paymentCountdownDuration);
+      setShowPaymentConfirmation(true);
       setCartOpen(false);
-      setCustomerOpen(false);
-      setCustomerName("");
-      setCustomerPhone("");
-      setMpesaReceipt("");
-      setStkSent(false);
-      setStkMessage("");
-      setReferralCodeInput("");
-      setReferralInfo(null);
-      setPickupSearch("");
 
-      setMessage("Order placed successfully. Opening WhatsApp...");
       window.open(whatsappUrl, "_blank");
 
       if (ownerLoggedIn) await Promise.all([loadOrders(), loadReferralData()]);
     } catch (error) {
       console.error(error);
+      setStkSent(false);
+      setStkMessage("");
       setMessage(error.message || "Could not place the order.");
     } finally {
-      setOwnerLoading(false);
+      setStkLoading(false);
     }
+  }
+
+  // Called when the customer closes the verification overlay — clears
+  // the checkout state so they can start a fresh order. The order
+  // itself is untouched in the database; the owner still sees it in
+  // the Payments tab regardless of whether this modal stays open.
+  function closeCheckoutAfterPayment() {
+    setShowPaymentConfirmation(false);
+    setCustomerOpen(false);
+    setCart([]);
+    setCustomerName("");
+    setCustomerPhone("");
+    setStkSent(false);
+    setStkMessage("");
+    setPendingOrderId(null);
+    setPaymentVerification(null);
+    setReferralCodeInput("");
+    setReferralInfo(null);
+    setPickupSearch("");
   }
 
   async function ownerLogin() {
@@ -1042,8 +1088,12 @@ function App() {
 
   async function acceptPayment(order) {
     if (!ownerLoggedIn) return setMessage("Owner login required.");
-    if (!order.mpesa_receipt) return setMessage("This payment has no M-Pesa receipt to verify.");
-
+    // CHANGED: previously gated on order.mpesa_receipt being present
+    // (which only existed because the customer typed it in). Now the
+    // receipt is populated automatically by the callback, so the
+    // meaningful gate is the automatic verification_status instead —
+    // the owner can still confirm regardless, since they may have
+    // independently checked their M-Pesa app.
     setOwnerLoading(true);
     try {
       const { error } = await supabase
@@ -1051,6 +1101,7 @@ function App() {
         .update({
           payment_status: "paid",
           order_status: order.order_status === "new" ? "confirmed" : order.order_status,
+          verification_status: "confirmed",
           updated_at: new Date().toISOString(),
         })
         .eq("id", order.id);
@@ -1077,6 +1128,7 @@ function App() {
         .update({
           payment_status: "failed",
           order_status: "cancelled",
+          verification_status: "rejected",
           updated_at: new Date().toISOString(),
         })
         .eq("id", order.id);
@@ -1873,7 +1925,21 @@ function App() {
                   <div className="rounded-2xl bg-[#f7f6f3] p-10 text-center text-sm text-black/40">No payments yet.</div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map((order) => (
+                    {orders.map((order) => {
+                      const VERIFICATION_LABELS = {
+                        pending: { label: "Pending", cls: "bg-gray-100 text-gray-600" },
+                        verifying: { label: "Verifying", cls: "bg-amber-100 text-amber-700" },
+                        valid_awaiting_owner: { label: "Valid — Awaiting Owner Confirmation", cls: "bg-blue-100 text-blue-700" },
+                        invalid: { label: "Invalid", cls: "bg-red-100 text-red-700" },
+                        amount_mismatch: { label: "Amount Mismatch", cls: "bg-red-100 text-red-700" },
+                        phone_mismatch: { label: "Phone Mismatch", cls: "bg-red-100 text-red-700" },
+                        confirmed: { label: "Confirmed", cls: "bg-green-100 text-green-700" },
+                        rejected: { label: "Rejected", cls: "bg-red-100 text-red-700" },
+                      };
+                      const verification = VERIFICATION_LABELS[order.verification_status] || VERIFICATION_LABELS.pending;
+                      const hasMismatch = order.verification_status === "amount_mismatch" || order.verification_status === "phone_mismatch";
+
+                      return (
                       <div key={order.id} className="rounded-2xl border bg-[#f7f6f3] p-5">
                         <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
                           <div>
@@ -1882,25 +1948,41 @@ function App() {
                               <span className={`rounded-full px-3 py-1 text-[10px] font-black ${order.payment_status === "paid" ? "bg-green-100 text-green-700" : order.payment_status === "failed" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
                                 {order.payment_status === "paid" ? "Accepted" : order.payment_status === "failed" ? "Rejected" : "Pending review"}
                               </span>
+                              <span className={`rounded-full px-3 py-1 text-[10px] font-black ${verification.cls}`}>
+                                Auto-verification: {verification.label}
+                              </span>
                             </div>
                             <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
                               <div><User size={14} className="mr-1 inline" /> {order.customer_name}</div>
                               <div><Phone size={14} className="mr-1 inline" /> {order.customer_phone}</div>
-                              <div className="font-black">Amount: {money(order.total)}</div>
+                              <div className="font-black">Order total: {money(order.total)}</div>
                               <div>Order: <strong>{order.order_status}</strong></div>
                               {order.pickup_point && <div className="sm:col-span-2">Pickup: <strong>{order.pickup_point}</strong></div>}
                             </div>
                             <div className="mt-4 rounded-xl bg-white p-4">
-                              <div className="text-[10px] font-black uppercase tracking-wider text-black/40">M-Pesa receipt</div>
-                              <div className="mt-1 break-all text-lg font-black">{order.mpesa_receipt || "Not provided"}</div>
-                              <div className="mt-1 text-xs text-black/40">Submitted {order.created_at ? new Date(order.created_at).toLocaleString() : "—"}</div>
+                              <div className="text-[10px] font-black uppercase tracking-wider text-black/40">M-Pesa receipt (from Safaricom callback)</div>
+                              <div className="mt-1 break-all text-lg font-black">{order.mpesa_receipt || "Not received yet"}</div>
+                              <div className="mt-2 grid gap-1 text-xs text-black/50 sm:grid-cols-2">
+                                <div>Amount paid: {order.mpesa_amount != null ? money(order.mpesa_amount) : "—"}</div>
+                                <div>Phone paid from: {order.mpesa_phone || "—"}</div>
+                              </div>
+                              {hasMismatch && (
+                                <div className="mt-3 rounded-lg bg-red-50 p-3 text-xs font-bold text-red-700">
+                                  {order.verification_status === "amount_mismatch"
+                                    ? "The amount Safaricom confirms does not match the order total. Double-check before confirming."
+                                    : "The phone number Safaricom confirms does not match the order's phone number. Double-check before confirming."}
+                                </div>
+                              )}
+                              {order.mpesa_result_desc && (
+                                <div className="mt-2 text-[11px] text-black/40">Safaricom: {order.mpesa_result_desc}</div>
+                              )}
                             </div>
                           </div>
                           <div className="flex flex-col justify-center gap-2">
                             {order.payment_status === "pending" && (
                               <>
-                                <button onClick={() => acceptPayment(order)} disabled={ownerLoading || !order.mpesa_receipt} className="w-full rounded-xl bg-black px-4 py-3 text-sm font-black text-white disabled:opacity-40">
-                                  <CheckCircle size={16} className="mr-2 inline" /> Accept payment
+                                <button onClick={() => acceptPayment(order)} disabled={ownerLoading} className="w-full rounded-xl bg-black px-4 py-3 text-sm font-black text-white disabled:opacity-40">
+                                  <CheckCircle size={16} className="mr-2 inline" /> Confirm payment
                                 </button>
                                 <button onClick={() => rejectPayment(order)} disabled={ownerLoading} className="w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-black text-red-600 disabled:opacity-40">
                                   Reject payment
@@ -1908,7 +1990,7 @@ function App() {
                               </>
                             )}
                             {order.payment_status === "paid" && (
-                              <div className="rounded-xl bg-green-50 p-4 text-sm font-bold text-green-700">✓ Payment accepted. Order is {order.order_status}.</div>
+                              <div className="rounded-xl bg-green-50 p-4 text-sm font-bold text-green-700">✓ Payment confirmed. Order is {order.order_status}.</div>
                             )}
                             {order.payment_status === "failed" && (
                               <div className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700">Payment rejected. Order cancelled.</div>
@@ -1916,7 +1998,8 @@ function App() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -2271,12 +2354,12 @@ function App() {
               </div>
 
               <button
-                onClick={startMpesaPayment}
-                disabled={stkLoading || ownerLoading || stkSent}
+                onClick={submitOrderAndPay}
+                disabled={stkLoading || stkSent}
                 className="w-full rounded-2xl py-4 text-sm font-black disabled:opacity-50"
                 style={{ background: theme.accent, color: "#111" }}
               >
-                {stkLoading ? "Sending M-Pesa prompt..." : stkSent ? "M-Pesa prompt sent ✓" : `Pay ${money(finalTotal)} with M-Pesa`}
+                {stkLoading ? "Placing order & sending M-Pesa prompt..." : stkSent ? "M-Pesa prompt sent ✓" : `Pay ${money(finalTotal)} with M-Pesa`}
               </button>
 
               {stkMessage && (
@@ -2285,93 +2368,97 @@ function App() {
                   <p className="mt-1 text-xs text-black/55">{stkMessage}</p>
                 </div>
               )}
-
-              {stkSent && (
-                <>
-                  <input
-                    value={mpesaReceipt}
-                    onChange={(e) => setMpesaReceipt(e.target.value.toUpperCase())}
-                    placeholder="Enter M-Pesa receipt after payment"
-                    className="w-full rounded-xl border px-4 py-3 text-sm uppercase outline-none"
-                  />
-                  <button
-                    onClick={placeOrder}
-                    disabled={ownerLoading || !mpesaReceipt.trim()}
-                    className="w-full rounded-2xl bg-black py-4 text-sm font-black text-white disabled:opacity-50"
-                  >
-                    {ownerLoading ? "Submitting order..." : "Submit order for owner verification"}
-                  </button>
-                  <p className="text-center text-[10px] text-black/35">The receipt is shown to the owner for verification before the order is accepted.</p>
-                </>
-              )}
             </div>
           </div>
         </div>
       )}
 
       {/* PAYMENT CONFIRMATION OVERLAY */}
-      {showPaymentConfirmation && (
+      {showPaymentConfirmation && (() => {
+        const status = paymentVerification?.verification_status || "verifying";
+        const STATUS_COPY = {
+          pending: { title: "Waiting for M-Pesa...", body: "Enter your M-Pesa PIN on your phone to complete the payment." },
+          verifying: { title: "Confirming your M-Pesa payment", body: "Enter your M-Pesa PIN on your phone. We're verifying the payment automatically as soon as Safaricom confirms it." },
+          valid_awaiting_owner: { title: "Payment verified ✓", body: "Your payment was verified automatically. The store owner will confirm your order shortly — you'll hear from us on WhatsApp." },
+          invalid: { title: "Payment not completed", body: "It looks like the M-Pesa payment wasn't completed (cancelled, timed out, or declined). You can close this and try again." },
+          amount_mismatch: { title: "Amount doesn't match", body: "The amount paid doesn't match your order total. Please contact us on WhatsApp so we can sort this out." },
+          phone_mismatch: { title: "Phone number doesn't match", body: "The payment came from a different phone number than the order. Please contact us on WhatsApp so we can sort this out." },
+        };
+        const copy = STATUS_COPY[status] || STATUS_COPY.verifying;
+        const isSettled = ["valid_awaiting_owner", "invalid", "amount_mismatch", "phone_mismatch"].includes(status);
+        const isSuccess = status === "valid_awaiting_owner";
+        const isProblem = status === "invalid" || status === "amount_mismatch" || status === "phone_mismatch";
+
+        return (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
           <div
             className="relative w-full max-w-sm overflow-hidden rounded-[2rem] bg-white p-8 text-center shadow-2xl"
             style={{ animation: "dls-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)" }}
           >
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 h-1.5 origin-left"
-              style={{
-                background: theme.accent,
-                animation: `dls-shrink ${paymentCountdown}s linear forwards`,
-              }}
-            />
+            {!isSettled && (
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-1.5 origin-left"
+                style={{
+                  background: theme.accent,
+                  animation: `dls-shrink ${paymentCountdown}s linear forwards`,
+                }}
+              />
+            )}
 
             <div className="relative mx-auto mb-2 flex h-40 w-40 items-center justify-center">
-              <span
-                className="absolute h-28 w-28 rounded-full opacity-25"
-                style={{ background: theme.accent, animation: "dls-glow 2.4s ease-in-out infinite" }}
-              />
-              <svg viewBox="0 0 120 120" className="absolute h-full w-full -rotate-90">
-                <circle cx="60" cy="60" r="54" fill="none" stroke={theme.accentSoft} strokeWidth="5" />
-                <circle
-                  cx="60" cy="60" r="54" fill="none"
-                  stroke={theme.accent}
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeDasharray="339.3"
-                  style={{
-                    strokeDashoffset: 339.3 * (1 - paymentCountdown / paymentCountdownDuration),
-                    transition: "stroke-dashoffset 1s linear",
-                  }}
+              {!isSettled && (
+                <span
+                  className="absolute h-28 w-28 rounded-full opacity-25"
+                  style={{ background: theme.accent, animation: "dls-glow 2.4s ease-in-out infinite" }}
                 />
-              </svg>
+              )}
+              {!isSettled && (
+                <svg viewBox="0 0 120 120" className="absolute h-full w-full -rotate-90">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke={theme.accentSoft} strokeWidth="5" />
+                  <circle
+                    cx="60" cy="60" r="54" fill="none"
+                    stroke={theme.accent}
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeDasharray="339.3"
+                    style={{
+                      strokeDashoffset: 339.3 * (1 - paymentCountdown / paymentCountdownDuration),
+                      transition: "stroke-dashoffset 1s linear",
+                    }}
+                  />
+                </svg>
+              )}
               <div
                 className="relative flex h-16 w-16 items-center justify-center rounded-full shadow-lg"
-                style={{ background: theme.accent }}
+                style={{ background: isSuccess ? "#0f9f75" : isProblem ? "#dc2626" : theme.accent }}
               >
-                <CreditCard size={26} color="#111" />
+                {isSuccess ? <CheckCircle size={26} color="#fff" /> : isProblem ? <X size={26} color="#fff" /> : <CreditCard size={26} color="#111" />}
               </div>
             </div>
 
-            <div className="text-2xl font-black" style={{ color: theme.accent }}>{paymentCountdown}s</div>
+            {!isSettled && (
+              <div className="text-2xl font-black" style={{ color: theme.accent }}>{paymentCountdown}s</div>
+            )}
 
-            <div className="mt-4 text-[10px] font-black uppercase tracking-[.25em]" style={{ color: theme.accent }}>
-              Payment in progress
+            <div className="mt-4 text-[10px] font-black uppercase tracking-[.25em]" style={{ color: isProblem ? "#dc2626" : theme.accent }}>
+              {isSuccess ? "Verified" : isProblem ? "Action needed" : "Payment in progress"}
             </div>
-            <h3 className="mt-2 text-xl font-black">Confirming your M-Pesa payment</h3>
-            <p className="mx-auto mt-2 max-w-[26rem] text-sm text-black/55">
-              Enter your M-Pesa PIN on your phone to complete the payment. Our team is verifying it on their end.
-            </p>
+            <h3 className="mt-2 text-xl font-black">{copy.title}</h3>
+            <p className="mx-auto mt-2 max-w-[26rem] text-sm text-black/55">{copy.body}</p>
 
-            <div className="mt-6 flex items-center justify-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite" }} />
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite", animationDelay: "0.2s" }} />
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite", animationDelay: "0.4s" }} />
-            </div>
+            {!isSettled && (
+              <div className="mt-6 flex items-center justify-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite" }} />
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite", animationDelay: "0.2s" }} />
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: theme.accent, animation: "dls-dot 1.2s ease-in-out infinite", animationDelay: "0.4s" }} />
+              </div>
+            )}
 
             <button
-              onClick={() => setShowPaymentConfirmation(false)}
+              onClick={closeCheckoutAfterPayment}
               className="mt-6 text-xs font-bold text-black/40 underline underline-offset-2"
             >
-              I've completed payment — enter receipt now
+              {isSettled ? "Close" : "Close and check later"}
             </button>
           </div>
 
@@ -2394,7 +2481,8 @@ function App() {
             }
           `}</style>
         </div>
-      )}
+        );
+      })()}
 
       {/* OWNER LOGIN */}
       {ownerOpen && !ownerLoggedIn && (
