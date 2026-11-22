@@ -722,99 +722,41 @@ function App() {
     setStkMessage("");
 
     try {
-      // --- 1. Resolve referral (unchanged logic, just moved earlier) ---
-      let verifiedReferral = null;
+      // Referral validation and discount calculation happen on the server.
+      let verifiedReferral = referralCodeInput.trim()
+        ? { code: referralCodeInput.trim().toUpperCase() }
+        : null;
       let verifiedDiscount = 0;
+      let orderSubtotal = cartSubtotal;
+      let orderTotal = cartSubtotal;
 
-      if (referralCodeInput.trim()) {
-        const code = referralCodeInput.trim().toUpperCase();
+      // Create the order and line items server-side. The server uses the
+      // Supabase service role and re-reads product prices from the database.
+      const createResponse = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
+          items: cart.map((item) => ({ id: item.id, quantity: item.quantity })),
+          referralCode: referralCodeInput.trim(),
+        }),
+      });
 
-        const { data: referral, error } = await supabase
-          .from("referral_codes")
-          .select("*")
-          .eq("code", code)
-          .eq("active", true)
-          .maybeSingle();
-
-        if (error) throw error;
-        if (!referral) throw new Error("The referral code is invalid.");
-
-        const { count, error: countError } = await supabase
-          .from("referral_events")
-          .select("*", { count: "exact", head: true })
-          .eq("referral_code", referral.code);
-
-        if (countError) throw countError;
-
-        const qualifies = Number(count || 0) >= REFERRAL_THRESHOLD;
-        verifiedReferral = referral;
-
-        if (qualifies) {
-          verifiedDiscount = Number(
-            (cartSubtotal * REFERRAL_DISCOUNT_PERCENT / 100).toFixed(2)
-          );
-        }
+      const createRaw = await createResponse.text();
+      let createData = {};
+      try { createData = createRaw ? JSON.parse(createRaw) : {}; }
+      catch { throw new Error("The order service returned an invalid response."); }
+      if (!createResponse.ok || !createData.orderId) {
+        throw new Error(createData.error || "Could not create your order.");
       }
 
-      const orderTotal = Math.max(0, cartSubtotal - verifiedDiscount);
+      const order = { id: createData.orderId, total: createData.total };
+      verifiedDiscount = Number(createData.discount || 0);
+      orderSubtotal = Number(createData.subtotal || cartSubtotal);
+      orderTotal = Number(createData.total || 0);
 
-      // --- 2. Create the order FIRST, as "pending", with no receipt.
-      // The receipt/verification fields are filled in later by the
-      // Safaricom callback, not by the customer. ---
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          customer_name: customerName.trim(),
-          customer_phone: customerPhone.trim(),
-          total: orderTotal,
-          subtotal: cartSubtotal,
-          payment_status: "pending",
-          order_status: "new",
-          referred_by: verifiedReferral?.owner_name || null,
-          referral_code: verifiedReferral?.code || null,
-          referral_discount: verifiedDiscount,
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      const items = cart.map((item) => ({
-        order_id: order.id,
-        product_id: item.id,
-        product_name: item.name,
-        quantity: item.quantity,
-        price: Number(item.price),
-      }));
-
-      const { error: itemError } = await supabase
-        .from("order_items")
-        .insert(items);
-
-      if (itemError) throw itemError;
-
-      if (verifiedReferral) {
-        await supabase.from("referral_events").insert({
-          referrer_name: verifiedReferral.owner_name,
-          referred_customer_name: customerName.trim(),
-          referred_customer_phone: customerPhone.trim(),
-          order_id: order.id,
-          referral_code: verifiedReferral.code,
-          discount_awarded: verifiedDiscount,
-        });
-
-        await supabase
-          .from("referral_codes")
-          .update({
-            total_referrals: Number(verifiedReferral.total_referrals || 0) + 1,
-            total_discount_awarded:
-              Number(verifiedReferral.total_discount_awarded || 0) + verifiedDiscount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", verifiedReferral.id);
-      }
-
-      // --- 3. Now trigger the STK push against that order. ---
+      // Trigger M-Pesa only after the server has saved the order.
       const response = await fetch("/api/mpesa/stkpush", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -863,7 +805,7 @@ function App() {
           (item) => `${item.name} x${item.quantity} = ${money(Number(item.price) * item.quantity)}`
         ),
         "",
-        `SUBTOTAL: ${money(cartSubtotal)}`,
+        `SUBTOTAL: ${money(orderSubtotal)}`,
         `REFERRAL DISCOUNT: ${verifiedDiscount ? "-" + money(verifiedDiscount) : "KSh 0"}`,
         `TOTAL TO PAY: ${money(orderTotal)}`,
         "An M-Pesa prompt has been sent — payment will be verified automatically.",
